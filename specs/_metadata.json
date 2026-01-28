@@ -1,0 +1,16 @@
+{
+    "specs": {
+        "Characters/test_character.md": {
+            "category": "Characters",
+            "description": "",
+            "title": "Test Character",
+            "version": "0.1"
+        },
+        "Lore/headless_test_spec.md": {
+            "category": "Lore",
+            "description": "A unit test spec.",
+            "title": "Headless Test Spec",
+            "version": "0.1"
+        }
+    }
+}
