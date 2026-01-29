@@ -143,147 +143,38 @@ def main():
         except:
             print(f"Release {current_version} does not exist. Proceeding...")
 
-    # REMOTE VS LOCAL BUILD PROMPT
-    print("\n--- Deployment Mode ---")
-    print("1. Remote Build (Recommended): Trigger GitHub Actions to build & release.")
-    print("2. Local Build: Build on this machine and upload manually.")
-    mode = input("Select Mode (1/2) [Default: 1]: ").strip()
+    # REMOTE BUILD (Default/Only Mode)
+    print("\n--- Triggering Remote Build ---")
+    print(f"This will push tag {current_version} to GitHub.")
+    print("GitHub Actions will automatically build and release the artifacts.")
     
-    if mode == "2":
-        # LOCAL BUILD LOGIC FLOW
-        pass 
-    else:
-        # REMOTE BUILD
-        print(f"\nTriggering Remote Build for {current_version}...")
-        
-        # Tag & Push
-        print("Ensuring Git Tag exists...")
-        tag_exists = False
-        try:
-             subprocess.check_call(["git", "rev-parse", current_version], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-             tag_exists = True
-        except:
-             pass
-             
-        if not tag_exists:
-             subprocess.call(["git", "tag", current_version])
-             print(f"Created tag {current_version}")
-             
-        print("Pushing tag to origin...")
-        try:
-            subprocess.check_call(["git", "push", "origin", current_version])
-            print("Tag pushed successfully!")
-            print("GitHub Actions should now start the build process.")
-            print(f"View progress at: https://github.com/KffeePt/storylord/actions")
-        except Exception as e:
-             print(f"Failed to push tag: {e}")
-             
-        print("Finished. Window will close in 15 seconds...")
-        time.sleep(15)
+    confirm = input("Proceed? (Y/n): ").strip().lower()
+    if confirm == 'n':
+        print("Aborted.")
         return
 
-    # LOCAL BUILD CONTINUES BELOW...
-    # Tag Logic (Redundant check if local flow chosen, but safe to keep)
-
-    # We should ensure the tag exists locally and is pushed
-    print("Ensuring Git Tag exists and is pushed...")
+    # Tag & Push
+    print("Ensuring Git Tag exists...")
+    tag_exists = False
     try:
-        # Check local tag
-        subprocess.check_call(["git", "rev-parse", current_version], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+         subprocess.check_call(["git", "rev-parse", current_version], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+         tag_exists = True
     except:
-        print(f"Tag {current_version} not found locally.")
-        create_tag = input(f"Create tag {current_version} now? (Y/n): ").strip().lower()
-        if create_tag != 'n':
-             subprocess.call(["git", "tag", current_version])
-    
-    # Push tag
+         pass
+         
+    if not tag_exists:
+         subprocess.call(["git", "tag", current_version])
+         print(f"Created tag {current_version}")
+         
     print("Pushing tag to origin...")
     try:
-        subprocess.call(["git", "push", "origin", current_version])
+        subprocess.check_call(["git", "push", "origin", current_version])
+        print("Tag pushed successfully!")
+        print("GitHub Actions should now start the build process.")
+        print(f"View progress at: https://github.com/KffeePt/storylord/actions")
     except Exception as e:
-        print(f"Warning: Failed to push tag: {e}")
+        print(f"Failed to push tag: {e}")
 
-    report = {}
-    bs = BuildSystem()
-    
-    # 1. Build OneFile
-    print(f"\n[Step 1] Building Single File Executable ({current_version})...")
-    try:
-        bs.run_pyinstaller_onefile()
-        report["Build OneFile"] = True
-    except Exception:
-        report["Build OneFile"] = False
-    
-    # 2. Build Installer
-    print("\n[Step 2] Building Standard Executable (for Installer)...")
-    try:
-        # Standard build often needed for installer to bundle content?
-        # Setup.py logic implies Installer calls standard build? No, installer.iss usually looks at files.
-        # run_pyinstaller builds to bin/Portable.
-        bs.run_pyinstaller()
-        report["Build Directory"] = True
-    except:
-         report["Build Directory"] = False
-
-    print("\n[Step 3] Building Installer...")
-    try:
-        bs.run_inno_setup()
-        report["Build Installer"] = True
-    except:
-        print("Checking for artifacts...")
-    artifacts = []
-    
-    # 1. OneFile (Portable)
-    onefile = os.path.abspath("bin/Portable/StoryLord-Portable.exe")
-    if os.path.exists(onefile):
-        artifacts.append(onefile)
-        report["OneFile"] = "Ready"
-    else:
-        report["OneFile"] = "Missing"
-
-    # 2. Installer
-    installer = os.path.abspath("bin/Installer/StoryLordSetup.exe")
-    if os.path.exists(installer):
-        artifacts.append(installer)
-        report["Installer"] = "Ready"
-    else:
-        report["Installer"] = "Missing"
-        
-    release_ready = True
-    if not artifacts:
-        release_ready = False
-        print("Error: No artifacts found for release!")
-        
-    # 4. Release via GH CLI
-    if release_ready:
-        print(f"\n[Step 4] Creating/Updating GitHub Release {current_version}...")
-        
-        # Create Title "Setup v..."
-        title = f"Setup {current_version}"
-        
-        cmd = ["gh", "release", "create", current_version, onefile, installer, "--title", title, "--generate-notes"]
-        
-        if release_exists:
-            # gh release create fails if exists. Use create/edit or upload?
-            # Safer to delete and recreate or just upload?
-            # 'gh release create' fails if tag exists? No, only if release exists.
-            # If release exists, we use upload --clobber
-             print("Release exists. Uploading assets...")
-             cmd = ["gh", "release", "upload", current_version, onefile, installer, "--clobber"]
-
-        try:
-            subprocess.check_call(cmd)
-            report["GitHub Release"] = True
-            print("Deployment Complete!")
-        except Exception as e:
-            report["GitHub Release"] = False
-            print(f"Deployment Failed: {e}")
-    else:
-        report["GitHub Release"] = False
-        print("Skipping Release due to missing artifacts.")
-
-    print_summary(report)
-        
     print("Finished. Window will close in 15 seconds...")
     time.sleep(15)
 
