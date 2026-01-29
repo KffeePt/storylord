@@ -15,8 +15,49 @@ Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs 
 
 [Icons]
 Name: "{group}\Story Lord"; Filename: "{app}\StoryLord.exe"
+[Registry]
+Root: HKCU; Subkey: "Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{app}"; Check: NeedsAddPath('{app}')
 
 [Code]
+function NeedsAddPath(Param: string): boolean;
+var
+  OrigPath: string;
+begin
+  if not RegQueryStringValue(HKEY_CURRENT_USER, 'Environment', 'Path', OrigPath)
+  then begin
+    Result := True;
+    exit;
+  end;
+  // look for the path with leading and trailing semicolon
+  // Pos() returns 0 if not found
+  Result := Pos(';' + Param + ';', ';' + OrigPath + ';') = 0;
+end;
+
+function InitializeSetup(): Boolean;
+var
+  UninsPath: String;
+  ResultCode: Integer;
+begin
+  Result := True;
+  // Check if already installed
+  if RegQueryStringValue(HKEY_LOCAL_MACHINE,
+    'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{#SetupSetting("AppId")}_is1',
+    'UninstallString', UninsPath) then
+  begin
+    // Clean up quotes
+    StringChange(UninsPath, '"', '');
+    
+    if MsgBox('Story Lord is already installed.' #13#10 #13#10 +
+              'Click "Yes" to Reinstall / Repair.' #13#10 +
+              'Click "No" to Uninstall.', mbConfirmation, MB_YESNO) = IDNO then
+    begin
+      // Run Uninstaller
+      Exec(UninsPath, '', '', SW_SHOW, ewNoWait, ResultCode);
+      Result := False; // Abort Setup
+    end;
+  end;
+end;
+
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 var
   UserProfile: String;
