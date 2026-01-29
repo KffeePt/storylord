@@ -1,12 +1,13 @@
-
 import unittest
 from unittest.mock import patch, MagicMock
 import sys
+import subprocess
 import os
 
-# Ensure we can import deploy.py
+# Ensure we can import from root
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-import deploy
+from setup import deploy
+from setup.deploy import DeployManager
 
 class TestDeployScript(unittest.TestCase):
     
@@ -14,21 +15,22 @@ class TestDeployScript(unittest.TestCase):
         # Silence print statements
         self.patcher = patch('builtins.print')
         self.mock_print = self.patcher.start()
+        self.dm = DeployManager()
         
     def tearDown(self):
         self.patcher.stop()
 
-    @patch('deploy.subprocess.check_output')
+    @patch('setup.deploy.subprocess.check_output')
     def test_can_push_to_main_true(self, mock_check_output):
         mock_check_output.return_value = b"WRITE\n"
         self.assertTrue(deploy.can_push_to_main())
 
-    @patch('deploy.subprocess.check_output')
+    @patch('setup.deploy.subprocess.check_output')
     def test_can_push_to_main_false(self, mock_check_output):
         mock_check_output.return_value = b"READ\n"
         self.assertFalse(deploy.can_push_to_main())
 
-    @patch('deploy.subprocess.check_output')
+    @patch('setup.deploy.subprocess.check_output')
     def test_check_branch_is_main(self, mock_check_output):
         mock_check_output.return_value = b"main\n"
         self.assertTrue(deploy.check_branch_is_main())
@@ -36,8 +38,8 @@ class TestDeployScript(unittest.TestCase):
         mock_check_output.return_value = b"feature/test\n"
         self.assertFalse(deploy.check_branch_is_main())
 
-    @patch('deploy.subprocess.check_call')
-    @patch('deploy.subprocess.check_output')
+    @patch('setup.deploy.subprocess.check_call')
+    @patch('setup.deploy.subprocess.check_output')
     @patch('builtins.input')
     def test_submit_pull_request_flow(self, mock_input, mock_check_output, mock_check_call):
         # State to track if checkout happened
@@ -68,7 +70,7 @@ class TestDeployScript(unittest.TestCase):
         # 2. Commit Msg -> "Added feature"
         mock_input.side_effect = ["feat/new-thing", "Added feature"]
         
-        deploy.submit_pull_request("1.0.0")
+        self.dm.submit_pull_request("1.0.0")
         
         # Assertions
         # 1. Checked out new branch
@@ -78,17 +80,18 @@ class TestDeployScript(unittest.TestCase):
         # 3. Created PR
         mock_check_call.assert_any_call(["gh", "pr", "create"])
 
-    @patch('deploy.tag_exists_remote')
-    @patch('deploy.subprocess.check_call')
+    @patch('setup.deploy.tag_exists_remote')
+    @patch('setup.deploy.subprocess.call')
+    @patch('setup.deploy.subprocess.check_call')
     @patch('builtins.input')
-    def test_deploy_release_trigger_logic(self, mock_input, mock_check_call, mock_tag_exists_remote):
+    def test_deploy_release_trigger_logic(self, mock_input, mock_check_call, mock_call, mock_tag_exists_remote):
         # Mocks
         mock_tag_exists_remote.return_value = True
         
         # We need to mock can_push_to_main to return True so we don't get stuck in the permission warning check
-        with patch('deploy.can_push_to_main', return_value=True):
+        with patch('setup.deploy.can_push_to_main', return_value=True):
             # And mock check_output for git status check
-             with patch('deploy.subprocess.check_output', return_value=b""):
+             with patch('setup.deploy.subprocess.check_output', return_value=b""):
                  # Inputs:
                  # 1. Tag Version -> "0.2.0"
                  # 2. Force re-trigger? -> "y"
@@ -105,16 +108,22 @@ class TestDeployScript(unittest.TestCase):
                  # 4. "Proceed? (Y/n)" -> "y"
                  # 5. "Force re-trigger CI? (Y/n)" -> "y"
                  
-                 mock_input.side_effect = ["0.2.0", "y", "y"]
+                 # Adjust input side effects based on new Unified Logic in setup/deploy.py
+                 # It goes: 
+                 # Tag exists remote? -> True. Release exists? -> Mocked False via check failure.
+                 # "Tag X exists on remote... Force re-trigger CI?"
                  
-                 # Mock check_call to handle 'gh release view' failure
+                 mock_input.side_effect = ["0.2.0", "y"]
+                 
+                 # Mock check_call to handle 'gh release view' failure (Simulate check failure = release not found)
                  def side_effect_check_call(args, **kwargs):
                      if "gh release view" in " ".join(args):
                          raise subprocess.CalledProcessError(1, args)
                      return 0
                  mock_check_call.side_effect = side_effect_check_call
+                 mock_call.return_value = 0
 
-                 deploy.deploy_release("0.1.0", True)
+                 self.dm.deploy_release("0.1.0")
                  
                  # Verify delete call
                  mock_check_call.assert_any_call(["git", "push", "--delete", "origin", "v0.2.0"])

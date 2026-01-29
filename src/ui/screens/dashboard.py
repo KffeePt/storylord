@@ -220,6 +220,8 @@ layout = Frame(
         align=WindowAlign.CENTER,
         style="class:launcher-content",
         wrap_lines=False,
+        left_margins=[],
+        right_margins=[],
     ),
     title=" Dashboard ",
     style="class:gold-frame"

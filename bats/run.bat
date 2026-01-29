@@ -1,7 +1,6 @@
 @echo off
 setlocal
-
-cd /d "%~dp0"
+cd /d "%~dp0\.."
 
 if not exist ".venv" (
     echo Creating virtual environment...

@@ -1,12 +1,16 @@
 [Setup]
 AppName=Story Lord
+AppId={{8B306052-16FA-45C6-B320-A081822EC70F}
 AppVersion={#MyAppVersion}
 DefaultDirName={autopf}\Story Lord
 DefaultGroupName=Story Lord
 OutputDir=bin\Installer
-OutputBaseFilename=StoryLordSetup
+OutputBaseFilename={#OutputFileName}
 Compression=lzma
 SolidCompression=yes
+PrivilegesRequired=admin
+SetupMutex=StoryLordSetupMutex
+AppMutex=StoryLordAppMutex
 
 [Files]
 ; Source is the OUTPUT of PyInstaller (directory mode)
@@ -18,7 +22,14 @@ Name: "{group}\Story Lord"; Filename: "{app}\StoryLord.exe"
 [Registry]
 Root: HKCU; Subkey: "Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{app}"; Check: NeedsAddPath('{app}')
 
+[Run]
+Filename: "{app}\StoryLord.exe"; Description: "{cm:LaunchProgram,Story Lord}"; Flags: nowait postinstall skipifsilent runasoriginaluser
+
 [Code]
+var
+  UninstallConfig: Boolean;
+  UninstallStories: Boolean;
+
 function NeedsAddPath(Param: string): boolean;
 var
   OrigPath: string;
@@ -33,29 +44,20 @@ begin
   Result := Pos(';' + Param + ';', ';' + OrigPath + ';') = 0;
 end;
 
-function InitializeSetup(): Boolean;
-var
-  UninsPath: String;
-  ResultCode: Integer;
+function InitializeUninstall(): Boolean;
 begin
   Result := True;
-  // Check if already installed
-  if RegQueryStringValue(HKEY_LOCAL_MACHINE,
-    'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{#SetupSetting("AppId")}_is1',
-    'UninstallString', UninsPath) then
-  begin
-    // Clean up quotes
-    StringChange(UninsPath, '"', '');
-    
-    if MsgBox('Story Lord is already installed.' #13#10 #13#10 +
-              'Click "Yes" to Reinstall / Repair.' #13#10 +
-              'Click "No" to Uninstall.', mbConfirmation, MB_YESNO) = IDNO then
-    begin
-      // Run Uninstaller
-      Exec(UninsPath, '', '', SW_SHOW, ewNoWait, ResultCode);
-      Result := False; // Abort Setup
-    end;
-  end;
+  // Pre-uninstall selection
+  UninstallConfig := False;
+  UninstallStories := False;
+
+  if MsgBox('Do you want to remove your Configuration files (~/.storylord)?' #13#10 + 
+            '(Selecting "No" will keep your settings for future installs)', mbConfirmation, MB_YESNO) = IDYES then
+      UninstallConfig := True;
+
+  if MsgBox('Do you want to remove your Story Data (Documents/StoryLord)?' #13#10 + 
+            'WARNING: This cannot be undone!', mbConfirmation, MB_YESNO) = IDYES then
+      UninstallStories := True;
 end;
 
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
@@ -66,29 +68,20 @@ var
 begin
   if CurUninstallStep = usUninstall then
   begin
-    UserProfile := ExpandConstant('{userprofile}');
+    UserProfile := GetEnv('USERPROFILE');
     ConfigDir := UserProfile + '\.storylord';
     StoriesDir := UserProfile + '\Documents\StoryLord';
 
-    // Prompt for Config Removal
-    if DirExists(ConfigDir) then
+    if UninstallConfig then
     begin
-      if MsgBox('Do you want to PERMANENTLY remove your Configuration files?' #13#10 +
-                'Location: ' + ConfigDir, mbConfirmation, MB_YESNO) = IDYES then
-      begin
-        DelTree(ConfigDir, True, True, True);
-      end;
+        if DirExists(ConfigDir) then
+            DelTree(ConfigDir, True, True, True);
     end;
 
-    // Prompt for Story Data Removal
-    if DirExists(StoriesDir) then
+    if UninstallStories then
     begin
-      if MsgBox('Do you want to PERMANENTLY remove all Story Data?' #13#10 +
-                'WARNING: This cannot be undone.' #13#10 +
-                'Location: ' + StoriesDir, mbConfirmation, MB_YESNO) = IDYES then
-      begin
-        DelTree(StoriesDir, True, True, True);
-      end;
+        if DirExists(StoriesDir) then
+            DelTree(StoriesDir, True, True, True);
     end;
   end;
 end;

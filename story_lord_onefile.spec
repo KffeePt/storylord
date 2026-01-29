@@ -4,10 +4,10 @@ block_cipher = None
 
 a = Analysis(
     ['src/main.py'],
-    pathex=[],
+    pathex=['src'],
     binaries=[],
     datas=[],
-    hiddenimports=['src.ui.screens', 'src.core', 'prompt_toolkit'],
+    hiddenimports=['src.ui.screens', 'src.core', 'prompt_toolkit', 'cli'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

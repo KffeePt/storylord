@@ -3,11 +3,16 @@ import sys
 import signal
 import atexit
 import time
+import ctypes
 from pathlib import Path
 from core.config import APP_DATA_ROOT
 
 # Lock Directory
 LOCK_DIR = os.path.join(APP_DATA_ROOT, "locks")
+
+# Windows Mutex for Installer Detection
+APP_MUTEX_NAME = "StoryLordAppMutex"
+_mutex_handle = None
 
 def get_mode():
     if getattr(sys, 'frozen', False):
@@ -110,4 +115,23 @@ def ensure_single_instance():
         print(f"Failed to acquire lock: {e}")
         # Proceed anyway? Or fail? 
         # Fail safe: proceed, but warn.
+
+    # Create Windows Mutex for Installer Detection (Windows only)
+    global _mutex_handle
+    if os.name == 'nt':
+        try:
+            kernel32 = ctypes.windll.kernel32
+            # CreateMutexW(lpMutexAttributes, bInitialOwner, lpName)
+            _mutex_handle = kernel32.CreateMutexW(None, False, APP_MUTEX_NAME)
+            if _mutex_handle:
+                # Register cleanup
+                def release_mutex():
+                    global _mutex_handle
+                    if _mutex_handle:
+                        kernel32.ReleaseMutex(_mutex_handle)
+                        kernel32.CloseHandle(_mutex_handle)
+                        _mutex_handle = None
+                atexit.register(release_mutex)
+        except Exception as e:
+            pass  # Non-critical, continue anyway
 

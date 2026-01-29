@@ -2,7 +2,7 @@
 REM Setup script for Story Lord
 REM Runs the configuration TUI (setup.py) using the virtual environment
 
-cd /d "%~dp0"
+cd /d "%~dp0\.."
 
 if not exist .venv (
     echo [ERROR] Virtual environment not found!

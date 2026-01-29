@@ -3,7 +3,9 @@ import os
 from prompt_toolkit.layout.containers import VSplit, Window, HSplit, FloatContainer, Float
 from prompt_toolkit.layout.controls import FormattedTextControl
 from prompt_toolkit.widgets import Frame, TextArea
+from prompt_toolkit.widgets import Frame, TextArea
 from prompt_toolkit.key_binding import KeyBindings
+from prompt_toolkit.filters import Condition
 from ui.state import state
 from core.config import STORY_LORD_ROOT, get_app_version
 from ui.theme import theme_manager
@@ -122,15 +124,15 @@ def get_version_text():
 # --- Keybindings ---
 kb = KeyBindings()
 
-@kb.add('up', filter=lambda: s_state.mode in ["MENU", "MANUAL", "VIEWER"])
-@kb.add('k', filter=lambda: s_state.mode in ["MENU", "MANUAL", "VIEWER"])
+@kb.add('up', filter=Condition(lambda: s_state.mode in ["MENU", "MANUAL", "VIEWER"]))
+@kb.add('k', filter=Condition(lambda: s_state.mode in ["MENU", "MANUAL", "VIEWER"]))
 def up(e):
     if s_state.mode == "MENU": s_state.menu_idx = max(0, s_state.menu_idx - 1)
     elif s_state.mode == "MANUAL": s_state.manual_idx = max(0, s_state.manual_idx - 1)
     elif s_state.mode == "VIEWER": s_state.viewer_scroll = max(0, s_state.viewer_scroll - 1)
 
-@kb.add('down', filter=lambda: s_state.mode in ["MENU", "MANUAL", "VIEWER"])
-@kb.add('j', filter=lambda: s_state.mode in ["MENU", "MANUAL", "VIEWER"])
+@kb.add('down', filter=Condition(lambda: s_state.mode in ["MENU", "MANUAL", "VIEWER"]))
+@kb.add('j', filter=Condition(lambda: s_state.mode in ["MENU", "MANUAL", "VIEWER"]))
 def down(e):
     if s_state.mode == "MENU": s_state.menu_idx = min(4, s_state.menu_idx + 1)
     elif s_state.mode == "MANUAL": s_state.manual_idx = min(len(s_state.manual_nodes)-1, s_state.manual_idx + 1)
@@ -174,11 +176,11 @@ def back(e):
          state.active_focus_zone = "SIDEBAR"
          e.app.layout.focus_previous()
 
-@kb.add('c-s', filter=lambda: s_state.mode == "EDITOR")
+@kb.add('c-s', filter=Condition(lambda: s_state.mode == "EDITOR"))
 def save(e):
     s_state.save_editor()
 
-@kb.add('e', filter=lambda: s_state.mode == "VERSION")
+@kb.add('e', filter=Condition(lambda: s_state.mode == "VERSION"))
 def edit_version(e):
     # Determine version file path (passed to VersionManager)
     # config.py: _VERSION_MANAGER = VersionManager(os.path.join(STORY_LORD_ROOT, "config", "config.json"))
