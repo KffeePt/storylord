@@ -6,7 +6,7 @@ from .config import get_schemas_dir
 from .models import StoryMetadata, StorySpec
 
 def get_metadata_file():
-    return os.path.join(get_schemas_dir(), "_metadata.json")
+    return os.path.join(get_schemas_dir(), "_schemas.json")
 
 def load_all_metadata() -> StoryMetadata:
     meta_file = get_metadata_file()
@@ -23,7 +23,7 @@ def load_all_metadata() -> StoryMetadata:
 
 def save_all_metadata(data: StoryMetadata) -> None:
     """
-    Saves the full StoryMetadata object to _metadata.json.
+    Saves the full StoryMetadata object to _schemas.json.
     """
     with open(get_metadata_file(), "w", encoding="utf-8") as f:
         # Use mode='json' (pydantic v2) or .dict() (v1)

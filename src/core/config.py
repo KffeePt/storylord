@@ -46,3 +46,13 @@ def get_story_name() -> str:
     if _ACTIVE_STORY_ROOT:
         return os.path.basename(_ACTIVE_STORY_ROOT)
     return "Unknown"
+
+# Versioning
+from core.version_manager import VersionManager
+_VERSION_MANAGER = VersionManager(os.path.join(STORY_LORD_ROOT, "config", "config.json"))
+
+def get_app_version() -> str:
+    return _VERSION_MANAGER.get_version()
+
+def get_version_manager() -> VersionManager:
+    return _VERSION_MANAGER

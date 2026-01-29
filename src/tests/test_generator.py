@@ -1,6 +1,6 @@
 import os
 from src.core import generator
-from src.core.models import StorySpec, GeneratorRequest
+from src.core.models import StorySpec
 
 def test_generate_spec_creates_file(mock_specs):
     # Act

@@ -1,0 +1,38 @@
+[
+    {
+        "file": "inputs.md",
+        "title": "Inputs & Controls",
+        "description": "Global shortcuts, navigation keys, and quick jump commands.",
+        "category": "Core"
+    },
+    {
+        "file": "options/dashboard.md",
+        "title": "Dashboard",
+        "description": "The main hub of Story Lord. Status overview and recent activity.",
+        "category": "Screens"
+    },
+    {
+        "file": "options/explorer.md",
+        "title": "Explorer",
+        "description": "File system navigation and project management.",
+        "category": "Screens"
+    },
+    {
+        "file": "options/generator.md",
+        "title": "Generator",
+        "description": "AI-powered content generation tools.",
+        "category": "Screens"
+    },
+    {
+        "file": "options/storyboard.md",
+        "title": "Storyboard",
+        "description": "Visual planning and scene organization.",
+        "category": "Screens"
+    },
+    {
+        "file": "development/versioning.md",
+        "title": "Versioning & Checkpoints",
+        "description": "Understanding the strictly monotonic checkpoint system.",
+        "category": "Development"
+    }
+]

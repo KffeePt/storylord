@@ -1,7 +1,7 @@
 import os
 import re
 from .metadata import update_file_header
-from .config import get_specs_dir
+from .config import get_schemas_dir, is_story_set
 from .models import StorySpec
 
 TEMPLATES_BODY = {
@@ -38,7 +38,7 @@ def generate_spec(category: str, title: str, version: str = "0.1", description: 
     except Exception as e:
         return False, f"Validation Error: {e}"
 
-    specs_dir = get_specs_dir()
+    specs_dir = get_schemas_dir()
     cat_dir = os.path.join(specs_dir, category)
     if not os.path.exists(cat_dir):
         os.makedirs(cat_dir)

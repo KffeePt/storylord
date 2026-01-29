@@ -9,6 +9,7 @@ from ui.state import state
 
 # Import Screens to register them
 from ui.screens import dashboard, generator, explorer, sync, launcher, storyboard, settings
+from core.config import get_app_version
 
 def register_screens():
     SCREENS["LAUNCHER"] = launcher.layout
@@ -57,7 +58,8 @@ class StoryLordApp:
             key_bindings=self.kb,
             style=self.style,
             full_screen=True,
-            mouse_support=True
+            mouse_support=True,
+            title=f"Story Lord v{get_app_version()}"
         )
     
     

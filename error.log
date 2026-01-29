@@ -1,0 +1,81 @@
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.0.2, pluggy-1.6.0
+rootdir: C:\Users\santi\Documents\guac
+configfile: pytest.ini
+collected 2 items
+
+src\tests\test_generator.py EE                                           [100%]
+
+=================================== ERRORS ====================================
+______________ ERROR at setup of test_generate_spec_creates_file ______________
+
+obj = <module 'src.core.metadata' from 'C:\\Users\\santi\\Documents\\guac\\src\\core\\metadata.py'>
+name = 'SCHEMAS_DIR', ann = 'src.core.metadata'
+
+    def annotated_getattr(obj: object, name: str, ann: str) -> object:
+        try:
+>           obj = getattr(obj, name)
+                  ^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'src.core.metadata' has no attribute 'SCHEMAS_DIR'
+
+.venv\Lib\site-packages\_pytest\monkeypatch.py:92: AttributeError
+
+The above exception was the direct cause of the following exception:
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001EC323D4B00>
+tmp_path = WindowsPath('C:/Users/santi/AppData/Local/Temp/pytest-of-santi/pytest-6/test_generate_spec_creates_fil0')
+
+    @pytest.fixture
+    def mock_specs(monkeypatch, tmp_path):
+        # Create a temp specs dir
+        d = tmp_path / "schemas"
+        d.mkdir()
+    
+        # Mock the SPECS_DIR in modules
+        # We need to patch where it is import/used.
+        # Ideally, core modules should load config.SPECS_DIR, but they import it.
+        # If they import contents, patching module.SPECS_DIR works.
+    
+>       monkeypatch.setattr("src.core.metadata.SCHEMAS_DIR", str(d)) # if metadata imports it directly
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'module' object at src.core.metadata has no attribute 'SCHEMAS_DIR'
+
+src\tests\conftest.py:22: AttributeError
+______________ ERROR at setup of test_generate_spec_no_overwrite ______________
+
+obj = <module 'src.core.metadata' from 'C:\\Users\\santi\\Documents\\guac\\src\\core\\metadata.py'>
+name = 'SCHEMAS_DIR', ann = 'src.core.metadata'
+
+    def annotated_getattr(obj: object, name: str, ann: str) -> object:
+        try:
+>           obj = getattr(obj, name)
+                  ^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'src.core.metadata' has no attribute 'SCHEMAS_DIR'
+
+.venv\Lib\site-packages\_pytest\monkeypatch.py:92: AttributeError
+
+The above exception was the direct cause of the following exception:
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001EC323D5350>
+tmp_path = WindowsPath('C:/Users/santi/AppData/Local/Temp/pytest-of-santi/pytest-6/test_generate_spec_no_overwrit0')
+
+    @pytest.fixture
+    def mock_specs(monkeypatch, tmp_path):
+        # Create a temp specs dir
+        d = tmp_path / "schemas"
+        d.mkdir()
+    
+        # Mock the SPECS_DIR in modules
+        # We need to patch where it is import/used.
+        # Ideally, core modules should load config.SPECS_DIR, but they import it.
+        # If they import contents, patching module.SPECS_DIR works.
+    
+>       monkeypatch.setattr("src.core.metadata.SCHEMAS_DIR", str(d)) # if metadata imports it directly
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'module' object at src.core.metadata has no attribute 'SCHEMAS_DIR'
+
+src\tests\conftest.py:22: AttributeError
+=========================== short test summary info ===========================
+ERROR src/tests/test_generator.py::test_generate_spec_creates_file - Attribut...
+ERROR src/tests/test_generator.py::test_generate_spec_no_overwrite - Attribut...
+============================== 2 errors in 0.28s ==============================

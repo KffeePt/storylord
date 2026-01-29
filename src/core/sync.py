@@ -1,9 +1,9 @@
 import os
-from .metadata import load_all_metadata, parse_header_from_file
-from .config import get_specs_dir
+from .metadata import load_all_metadata, parse_header_from_file, scan_and_sync
+from .config import get_schemas_dir, is_story_set
 
 def check_sync_status():
-    specs_dir = get_specs_dir()
+    specs_dir = get_schemas_dir()
     issues = []
     data = load_all_metadata() # StoryMetadata
     specs = data.specs # Access Model field
@@ -24,7 +24,7 @@ def check_sync_status():
                     json_meta = specs[rel_path]
                     mismatches = []
                     for k in ["title", "version", "category"]:
-                        if file_meta.get(k, "") != json_meta.get(k, ""):
+                        if getattr(file_meta, k, "") != getattr(json_meta, k, ""):
                             mismatches.append(f"{k} mismatch")
                     if mismatches:
                         issues.append({"file": rel_path, "status": "METADATA_MISMATCH", "details": ", ".join(mismatches)})

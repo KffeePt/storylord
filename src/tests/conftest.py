@@ -19,7 +19,7 @@ def mock_specs(monkeypatch, tmp_path):
     # Ideally, core modules should load config.SPECS_DIR, but they import it.
     # If they import contents, patching module.SPECS_DIR works.
     
-    monkeypatch.setattr("src.core.metadata.SCHEMAS_DIR", str(d)) # if metadata imports it directly
+    # monkeypatch.setattr("src.core.metadata.SCHEMAS_DIR", str(d)) # Removed as it doesn't exist
     # Better: Patch the function get_schemas_dir in config?
     # Or patch the modules that use config. But here we saw they import `get_specs_dir`.
     # Wait, metadata.py imports `get_schemas_dir`.
@@ -40,7 +40,7 @@ def mock_specs(monkeypatch, tmp_path):
     monkeypatch.setattr("src.core.config.get_schemas_dir", lambda: str(d))
     
     # Also patch METADATA_FILE
-    meta_file = d / "_metadata.json"
-    monkeypatch.setattr("src.core.metadata.METADATA_FILE", str(meta_file))
+    meta_file = d / "_schemas.json"
+    monkeypatch.setattr("src.core.metadata.get_metadata_file", lambda: str(meta_file))
     
     return d

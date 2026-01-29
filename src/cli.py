@@ -2,7 +2,7 @@ import argparse
 import sys
 import os
 import json
-from core.config import set_story_root, get_specs_dir, STORY_LORD_ROOT, ensure_global_root, CATEGORIES
+from core.config import set_story_root, get_schemas_dir, STORY_LORD_ROOT, ensure_global_root, CATEGORIES
 from core.models import StoryMetadata, StorySpec
 from core.metadata import load_all_metadata, parse_header_from_file, save_all_metadata
 from core.generator import generate_spec
@@ -119,7 +119,7 @@ def main():
                 print(msg)
                 
         elif args.verb == "read":
-            full_path = os.path.join(get_specs_dir(), args.path)
+            full_path = os.path.join(get_schemas_dir(), args.path)
             if os.path.exists(full_path):
                 with open(full_path, "r", encoding="utf-8") as f:
                     content = f.read()
@@ -132,7 +132,7 @@ def main():
                 
     elif args.noun == "tree":
         # Simple tree
-        root = get_specs_dir()
+        root = get_schemas_dir()
         if args.json:
              # Recursive dict
              def dirtree(p):
@@ -140,7 +140,7 @@ def main():
              print(json.dumps(dirtree(root)))
         else:
             for root, dirs, files in os.walk(root):
-                level = root.replace(get_specs_dir(), '').count(os.sep)
+                level = root.replace(get_schemas_dir(), '').count(os.sep)
                 indent = ' ' * 4 * (level)
                 print(f'{indent}{os.path.basename(root)}/')
                 subindent = ' ' * 4 * (level + 1)

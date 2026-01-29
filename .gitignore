@@ -7,3 +7,10 @@ build/
 bin/
 *.spec
 *.iss
+.pytest_cache/
+
+
+# Codeman Specific
+.codeman.lock
+.shiva.lock
+.codeman-registry.json
