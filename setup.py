@@ -272,7 +272,7 @@ def main():
         try:
             choice = radiolist_dialog(
                 title="Story Lord System Manager",
-                text="Select Task:",
+                text="Select Task:\n(Use Arrow Keys to Navigate, Enter to Confirm Selection)",
                 values=[
                     ("build", "Dev: Build... (Select multiple)"),
                     ("deploy", "Dev: Deploy / Release (GitHub)"),
@@ -311,6 +311,7 @@ def main():
                     
         elif choice == "deploy":
              subprocess.call([sys.executable, "deploy.py"])
+             input("\nDeployment script finished. Press Enter to return to menu...")
 
         elif choice == "install":
             bs.install_app()
