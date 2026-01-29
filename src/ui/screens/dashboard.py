@@ -32,7 +32,17 @@ DASHBOARD_MENU_TREE = {
     "SYSTEM_OPS": {
         "label": "System",
         "description": "Configuration and persistence.",
-        "children": ["EXIT_APP"]
+        "children": ["NAV_SETTINGS", "NAV_RUN_INSTALLED", "EXIT_APP"]
+    },
+    "NAV_SETTINGS": {
+        "label": "Settings & Documentation",
+        "description": "Manage config, themes, and versions.",
+        "param": "SETTINGS"
+    },
+    "NAV_RUN_INSTALLED": {
+        "label": "Run Installed App",
+        "description": "Launch the installed production version.",
+        "param": "RUN_INSTALLED"
     },
     "NAV_GEN": {
         "label": "Spec Generator",
@@ -69,6 +79,33 @@ def execute_action(action_param):
     if action_param == "EXIT":
         from prompt_toolkit.application.current import get_app
         get_app().exit()
+    elif action_param == "RUN_INSTALLED":
+        import subprocess
+        import os
+        # Try default paths
+        paths = [
+            os.path.expandvars(r"%ProgramFiles%\Story Lord\StoryLord.exe"),
+            os.path.expandvars(r"%ProgramFiles(x86)%\Story Lord\StoryLord.exe"),
+        ]
+        exe_path = None
+        for p in paths:
+            if os.path.exists(p):
+                exe_path = p
+                break
+        
+        if exe_path:
+            state.set_status(f"Launching {exe_path}...")
+            subprocess.Popen([exe_path], close_fds=True, creationflags=subprocess.DETACHED_PROCESS if os.name == 'nt' else 0)
+        else:
+            state.set_status("Error: Installed App not found.")
+
+    elif action_param == "SETTINGS":
+        state.active_screen = "SETTINGS"
+        from prompt_toolkit.application.current import get_app
+        # settings.refresh() if needed
+        from ui.screens import settings
+        get_app().layout.focus(settings.layout)
+
     elif action_param in ["GENERATOR", "EXPLORER", "SYNC", "STORYBOARD"]:
         # Switch screen
         state.active_screen = action_param

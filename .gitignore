@@ -14,3 +14,4 @@ bin/
 .codeman.lock
 .shiva.lock
 .codeman-registry.json
+_shiva_runner.bat

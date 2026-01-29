@@ -11,8 +11,3 @@
 *   **A / Left Arrow**: Go Back / Collapse Folder.
 *   **D / Right Arrow**: Select / Enter Folder / Expand.
 
-## Quick Jump Keys
-*   **F1**: Dashboard
-*   **F2**: Generator
-*   **F3**: Explorer
-*   **F4**: Sync Status

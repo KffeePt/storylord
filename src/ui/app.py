@@ -28,30 +28,8 @@ class StoryLordApp:
         self.kb = KeyBindings()
         self.setup_global_bindings()
         
-        self.style = Style.from_dict({
-            # Base
-            '': '#e0e0e0 bg:#1e1e1e', # Light text, Dark bg
-            
-            # Components
-            'header': 'bg:#d4af37 #1e1e1e bold', # Gold bg, Dark text
-            'sidebar': 'bg:#252526 #e0e0e0', # VS Code-ish sidebar
-            'sidebar-active-blur': '#888888',
-            
-            # Menu
-            'menu-selected': 'bg:#d4af37 #1e1e1e bold', # Gold highlight
-            'menu-item': '#8fbcbb', # Pastel Teal
-            'special-storyboard': 'bg:#d4af37 #000000 bold', # Gold bg, Black text (Special)
-            
-            # Status
-            'error': '#ff5555 bg:#1e1e1e bold', # Pastel Red text
-            'success': '#a3be8c bg:#1e1e1e bold', # Pastel Green text
-            'warning': '#ebcb8b bg:#1e1e1e', # Pastel Yellow
-            
-            # Frames
-            'gold-frame': 'bg:#1e1e1e #d4af37 border:#d4af37',
-            'line': '#444444', # Dark grey separator
-            'launcher-content': 'bg:#1e1e1e #e0e0e0',
-        })
+        from ui.theme import theme_manager
+        self.style = theme_manager.get_style()
         
         self.app = Application(
             layout=self.layout,
@@ -59,7 +37,6 @@ class StoryLordApp:
             style=self.style,
             full_screen=True,
             mouse_support=True,
-            title=f"Story Lord v{get_app_version()}"
         )
     
     
@@ -72,16 +49,7 @@ class StoryLordApp:
              sys.exit(0)
             
         # Global shortcuts for power users, but Menu System is primary.
-        @self.kb.add('f1')
-        def dash(event): 
-            state.active_screen = "DASHBOARD"
-            event.app.layout.focus(dashboard.layout)
-        # ... (others remain)
-        
-        @self.kb.add('f2')
-        def gen(event): 
-            state.active_screen = "GENERATOR"
-            event.app.layout.focus(generator.layout)
+
         
         
         @self.kb.add('escape', 'r')
@@ -99,12 +67,9 @@ class StoryLordApp:
             
 
             
-        @self.kb.add('f4')
-        def sync(event): 
-            state.active_screen = "SYNC"
-            from ui.screens import sync
-            sync.refresh()
-            event.app.layout.focus(sync.layout)
+            state.set_status(f"Debug: {state.show_debug}")
+            
+
 
         @self.kb.add('w')
         def debug_w(event):

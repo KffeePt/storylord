@@ -9,7 +9,6 @@ Welcome to **Story Lord**, a powerful CLI tool for managing your story bible, ti
 ### Global Keys
 - **Alt+R**: Restart the CLI immediately.
 - **Alt+D**: Toggle Debug Mode overlay.
-- **F1 - F4**: Quick Jump to Screens (Dashboard, Generator, Explorer, Sync).
 - **Ctrl+C / Q**: Quit (Global safe exit).
 
 ### Navigation
