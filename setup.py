@@ -54,6 +54,9 @@ class BuildSystem:
     def _countdown_or_wait(self, success: bool, seconds: int = 5):
         """On success: auto-continue after countdown. On failure: wait for Enter."""
         import time
+        # Check if running in a non-interactive environment (e.g., GitHub Actions)
+        is_ci = os.environ.get("GITHUB_ACTIONS") == "true" or os.environ.get("CI") == "true"
+
         if success:
             print(f"\nSuccess! Continuing in {seconds} seconds...", end="", flush=True)
             for i in range(seconds, 0, -1):
@@ -61,7 +64,11 @@ class BuildSystem:
                 time.sleep(1)
             print("\n")
         else:
-            input("\nPress Enter to continue...")
+            if is_ci:
+                print("\n[CI DETECTED] Build Failed. Exiting immediately without waiting for input.")
+                sys.exit(1)
+            else:
+                input("\nPress Enter to continue...")
 
     def run_pyinstaller(self):
         print("Building Directory Executable with PyInstaller...")
