@@ -232,3 +232,30 @@ XI. FINAL STORY CONSTANTS
 3.  **Perfect order kills art.**
 4.  **Humanity survives through error.**
 5.  **The future must remain unknowable.**
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Gravitacionales
+
+Electromagnéticos
+
+Señalización química
+
+Gradientes entrópicos

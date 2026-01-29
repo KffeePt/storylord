@@ -95,11 +95,11 @@ def handle_menu_input(event):
             state.load_story(path)
             state.active_screen = "DASHBOARD"
             
-            # Force focus to dashboard
+            # Force focus to SIDEBAR (User Request)
             try:
-                state.active_focus_zone = "CONTENT"
-                from ui.screens import dashboard
-                event.app.layout.focus(dashboard.menu_control)
+                state.active_focus_zone = "SIDEBAR"
+                from ui.layout import sidebar_control
+                event.app.layout.focus(sidebar_control)
             except Exception as e:
                 state.set_status(f"Focus Error: {e}")
             
