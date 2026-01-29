@@ -187,9 +187,9 @@ class DeployManager:
         if release_exists and remote_tag_exists:
             print(f"\n{Colors.WARNING}[!] Release AND Tag {current_version} already exist on remote.{Colors.ENDC}")
             set_cursor_visible(True)
-            choice = input(f"Overwrite release and force re-trigger CI? ({Colors.GREEN}y{Colors.ENDC}/N): ").strip().lower()
+            choice = input(f"Overwrite release and force re-trigger CI? ({Colors.GREEN}Y{Colors.ENDC}/n): ").strip().lower()
             set_cursor_visible(False)
-            if choice == 'y':
+            if choice != 'n':
                 should_proceed = True
                 force_retrigger = True
             else:
@@ -198,9 +198,9 @@ class DeployManager:
         elif remote_tag_exists:
             print(f"\n{Colors.WARNING}[!] Tag {current_version} exists on remote (but no release found).{Colors.ENDC}")
             set_cursor_visible(True)
-            choice = input(f"Force re-trigger CI? ({Colors.GREEN}y{Colors.ENDC}/N): ").strip().lower()
+            choice = input(f"Force re-trigger CI? ({Colors.GREEN}Y{Colors.ENDC}/n): ").strip().lower()
             set_cursor_visible(False)
-            if choice == 'y':
+            if choice != 'n':
                 should_proceed = True
                 force_retrigger = True
             else:
@@ -209,7 +209,7 @@ class DeployManager:
         elif release_exists:
              print(f"{Colors.WARNING}WARNING: Release {current_version} check failed consistency.{Colors.ENDC}")
              set_cursor_visible(True)
-             overwrite = input(f"Overwrite release? ({Colors.GREEN}y{Colors.ENDC}/N): ").strip().lower() == 'y'
+             overwrite = input(f"Overwrite release? ({Colors.GREEN}Y{Colors.ENDC}/n): ").strip().lower() != 'n'
              set_cursor_visible(False)
              if overwrite:
                  should_proceed = True
