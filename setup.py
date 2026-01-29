@@ -166,7 +166,16 @@ class BuildSystem:
             
             # Pass version to ISCC
             # /DMyAppVersion="v1.0..."
-            subprocess.check_call([iscc_cmd, f"/DMyAppVersion={version}", "installer.iss"])
+            # /DSourceDir="absolute/path"
+            
+            # Debug: List dist dir
+            print(f"Checking DIST_DIR: {DIST_DIR}")
+            if os.path.exists(DIST_DIR):
+                print(f"Contents: {os.listdir(DIST_DIR)}")
+            else:
+                print("DIST_DIR does not exist!")
+
+            subprocess.check_call([iscc_cmd, f"/DMyAppVersion={version}", f'/DSourceDir={DIST_DIR}', "installer.iss"])
             print("Installer Complete! Check bin/Installer.")
             success = True
         except FileNotFoundError as fnf:
