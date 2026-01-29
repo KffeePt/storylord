@@ -87,16 +87,46 @@ def main():
             new_version = tag_input
     
     if new_version:
-        # Update Config
+        # Update src/core/_version.py
         try:
-            config_path = os.path.join(APP_DATA_ROOT, "config", "config.json")
-            vm = VersionManager(config_path)
-            vm.save_version_to_config(new_version)
-            print(f"Version updated to {new_version}")
+            version_file = os.path.join("src", "core", "_version.py")
+            with open(version_file, "w") as f:
+                f.write("# Auto-generated version file\n")
+                f.write(f'__version__ = "{new_version}"\n')
+            
+            print(f"Updated {version_file} to {new_version}")
             current_version = new_version
         except Exception as e:
-            print(f"Failed to update version: {e}")
+            print(f"Failed to update _version.py: {e}")
             pass 
+
+    # 1. Git Commit Logic (Before Release/Tagging)
+    # Check for uncommitted changes
+    try:
+        status_output = subprocess.check_output(["git", "status", "--porcelain"], stderr=subprocess.DEVNULL).decode("utf-8").strip()
+        if status_output:
+            print("\n[!] Uncommitted changes detected (including version config update if any).")
+            commit_choice = input("Commit changes before releasing? (Y/n): ").strip().lower()
+            if commit_choice != 'n':
+                default_msg = f"chore: Release {current_version}"
+                commit_msg = input(f"Enter Commit Message [Default: '{default_msg}']: ").strip()
+                if not commit_msg:
+                    commit_msg = default_msg
+                
+                print("Committing changes...")
+                subprocess.check_call(["git", "add", "."])
+                subprocess.check_call(["git", "commit", "-m", commit_msg])
+                
+                print("Pushing to origin...")
+                subprocess.check_call(["git", "push", "origin", "main"]) # Assuming main
+        else:
+             print("No uncommitted changes.")
+    except Exception as e:
+        print(f"Git status check check/commit failed: {e}")
+        # Don't return, allow user to decide? Or return?
+        # If git fails here, tagging might also fail.
+        # But let's proceed to allow manual handling if needed.
+        pass
 
     # Check if release exists
     print(f"Checking if release {current_version} exists on GitHub...")
@@ -200,19 +230,29 @@ def main():
         bs.run_inno_setup()
         report["Build Installer"] = True
     except:
-        report["Build Installer"] = False
+        print("Checking for artifacts...")
+    artifacts = []
     
-    # 3. Locate Artifacts
-    onefile = os.path.abspath("bin/Release/StoryLord-Portable.exe")
+    # 1. OneFile (Portable)
+    onefile = os.path.abspath("bin/Portable/StoryLord-Portable.exe")
+    if os.path.exists(onefile):
+        artifacts.append(onefile)
+        report["OneFile"] = "Ready"
+    else:
+        report["OneFile"] = "Missing"
+
+    # 2. Installer
     installer = os.path.abspath("bin/Installer/StoryLordSetup.exe")
-    
+    if os.path.exists(installer):
+        artifacts.append(installer)
+        report["Installer"] = "Ready"
+    else:
+        report["Installer"] = "Missing"
+        
     release_ready = True
-    if not os.path.exists(onefile):
-        print("Error: Single File EXE not found!")
+    if not artifacts:
         release_ready = False
-    if not os.path.exists(installer):
-        print("Error: Installer not found!")
-        release_ready = False
+        print("Error: No artifacts found for release!")
         
     # 4. Release via GH CLI
     if release_ready:

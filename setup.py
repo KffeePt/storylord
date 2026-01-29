@@ -13,8 +13,11 @@ from prompt_toolkit import prompt
 from prompt_toolkit.shortcuts import checkboxlist_dialog, radiolist_dialog, message_dialog, yes_no_dialog
 
 # Constants
-# Redirect PyInstaller output to bin/Portable (was bin/Dist)
-DIST_DIR = os.path.abspath("bin/Portable/StoryLord") 
+# Redirect PyInstaller output
+# bin/Dist -> Directory Build
+# bin/Portable -> Single File
+# bin/Installer -> Setup
+DIST_DIR = os.path.abspath("bin/Dist/StoryLord") 
 INSTALLER_DIR = os.path.abspath("bin/Installer")
 DEFAULT_INSTALL_PATH = os.path.expandvars(r"%ProgramFiles%\Story Lord")
 CONFIG_DIR = os.path.expanduser("~/.storylord")
@@ -36,24 +39,26 @@ class BuildSystem:
         manifest = {}
         base_len = len(DIST_DIR) + 1
         
-        for root, dirs, files in os.walk(DIST_DIR):
-            for file in files:
-                full_path = os.path.join(root, file)
-                rel_path = full_path[base_len:] 
-                try:
-                    h = self.get_file_hash(full_path)
-                    manifest[rel_path] = h
-                except Exception as e:
-                    print(f"Error hashing {rel_path}: {e}")
+        if os.path.exists(DIST_DIR):
+            for root, dirs, files in os.walk(DIST_DIR):
+                for file in files:
+                    full_path = os.path.join(root, file)
+                    rel_path = full_path[base_len:] 
+                    try:
+                        h = self.get_file_hash(full_path)
+                        manifest[rel_path] = h
+                    except Exception as e:
+                        print(f"Error hashing {rel_path}: {e}")
                     
-        manifest_path = os.path.join(DIST_DIR, "manifest.json")
-        with open(manifest_path, "w") as f:
-            json.dump(manifest, f, indent=2)
-        print(f"Manifest saved to {manifest_path}")
+            manifest_path = os.path.join(DIST_DIR, "manifest.json")
+            with open(manifest_path, "w") as f:
+                json.dump(manifest, f, indent=2)
+            print(f"Manifest saved to {manifest_path}")
 
     def _countdown_or_wait(self, success: bool, seconds: int = 5):
         """On success: auto-continue after countdown. On failure: wait for Enter."""
         import time
+        import os
         # Check if running in a non-interactive environment (e.g., GitHub Actions)
         is_ci = os.environ.get("GITHUB_ACTIONS") == "true" or os.environ.get("CI") == "true"
 
@@ -74,10 +79,10 @@ class BuildSystem:
         print("Building Directory Executable with PyInstaller...")
         success = False
         try:
-            # Output to bin/Portable/StoryLord
+            # Output to bin/Dist/StoryLord
             # --distpath sets the parent of the output folder.
-            dist_path = os.path.abspath("bin/Portable")
-            work_path = os.path.abspath("bin/Build")
+            dist_path = os.path.abspath("bin/Dist")
+            work_path = os.path.abspath("bin/Build/Dir")
             
             subprocess.check_call([
                 sys.executable, "-m", "PyInstaller",
@@ -116,10 +121,9 @@ class BuildSystem:
         print("Building Single-File Executable with PyInstaller...")
         success = False
         try:
-            # Output to bin/Release (or similar, user said "deploy to a single StoryLord.exe")
-            # Let's put it in bin/Release for clarity compared to bin/Dist (directory)
-            dist_path = os.path.abspath("bin/Release")
-            work_path = os.path.abspath("bin/BuildOneFile")
+            # Output to bin/Portable
+            dist_path = os.path.abspath("bin/Portable")
+            work_path = os.path.abspath("bin/Build/OneFile")
             
             subprocess.check_call([
                 sys.executable, "-m", "PyInstaller",
@@ -131,7 +135,8 @@ class BuildSystem:
                 "story_lord_onefile.spec"
             ])
             
-            # Rename to StoryLord-Portable.exe to distinguish
+            # Rename if needed, but if distpath is bin/Portable, spec likely outputs StoryLord.exe there.
+            # Let's ensure name is consistent.
             src = os.path.join(dist_path, "StoryLord.exe")
             dst = os.path.join(dist_path, "StoryLord-Portable.exe")
             if os.path.exists(src):

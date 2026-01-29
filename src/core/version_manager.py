@@ -44,40 +44,26 @@ class VersionManager:
             return None
 
     def load_version(self) -> str:
-        """Loads version from Git, falling back to config file."""
+        """Loads version from Git, falling back to _version.py."""
+        # 1. Try Git (Dev environment)
         git_ver = self.get_git_version()
         if git_ver:
             self._version = git_ver
-            # Auto-sync to config for persistence/backup
-            self.save_version_to_config(git_ver)
             return self._version
 
-        # Fallback to config
+        # 2. Fallback to _version.py (Prod/Frozen environment)
         try:
-            with open(self.config_path, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-                self._version = data.get("version", self.DEFAULT_VERSION)
-        except (FileNotFoundError, json.JSONDecodeError):
+            from ._version import __version__
+            self._version = __version__
+        except ImportError:
             self._version = self.DEFAULT_VERSION
+            
         return self._version
 
     def save_version_to_config(self, version: str):
-        """Saves version to config file (backup/fallback)."""
-        data = {}
-        if os.path.exists(self.config_path):
-            try:
-                with open(self.config_path, 'r', encoding='utf-8') as f:
-                    data = json.load(f)
-            except json.JSONDecodeError:
-                pass
+        """Deprecated: Version is now managed via _version.py and Git Tags."""
+        pass
 
-        data["version"] = version
-        
-        try:
-            with open(self.config_path, 'w', encoding='utf-8') as f:
-                json.dump(data, f, indent=4)
-        except OSError:
-            pass # benign failure
 
     def get_version(self) -> str:
         """Returns the current resolved version."""
