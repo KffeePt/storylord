@@ -25,7 +25,7 @@ def countdown_or_wait(success: bool, seconds: int = 5):
     is_ci = os.environ.get("GITHUB_ACTIONS") == "true" or os.environ.get("CI") == "true"
 
     if success:
-        print(f"{Colors.CURSOR_HIDE}\nSuccess! Continuing in {seconds} seconds...", end="", flush=True)
+        print(f"\nSuccess! Continuing in {seconds} seconds...", end="", flush=True)
         for i in range(seconds, 0, -1):
             time.sleep(1)
         print("\n")
@@ -77,5 +77,29 @@ def set_cursor_visible(visible: bool):
             ctypes.windll.kernel32.SetConsoleCursorInfo(hStdOut, ctypes.byref(cursorInfo))
         except:
             pass
+
+def validate_version_basic(version_str: str) -> bool:
+    """Strictly validates x.y.z format (digits and dots only)."""
+    import re
+    return bool(re.match(r"^\d+\.\d+\.\d+$", version_str))
+
+def prompt_version_stage() -> str:
+    """Prompts for release stage: alpha (a), beta (b), or prod (empty)."""
+    print(f"\nRelease Stage: {Colors.CYAN}a{Colors.ENDC} (alpha), {Colors.CYAN}b{Colors.ENDC} (beta), or {Colors.BOLD}Enter{Colors.ENDC} for Production")
+    set_cursor_visible(True)
+    choice = input("Stage [prod]: ").strip().lower()
+    set_cursor_visible(False)
+    
+    if choice == 'a' or choice == 'alpha':
+        return "_alpha"
+    elif choice == 'b' or choice == 'beta':
+        return "_beta"
+    return ""
+
+def get_full_version(base_version: str, stage: str) -> str:
+    """Constructs final version string like v1.2.3_alpha."""
+    prefix = "" if base_version.startswith("v") else "v"
+    return f"{prefix}{base_version}{stage}"
+
 
 

@@ -2,7 +2,7 @@ import os
 import sys
 import subprocess
 import urllib.request
-from .utils import Colors, INSTALLER_DIR, countdown_or_wait
+from .utils import Colors, INSTALLER_DIR, countdown_or_wait, set_cursor_visible
 
 import glob
 
@@ -69,7 +69,10 @@ class InstallerManager:
             installer_path = max(all_matches, key=os.path.getctime)
             print(f"Found installer: {os.path.basename(installer_path)} in {os.path.dirname(installer_path)}")
             
-            if input("Download fresh version from GitHub anyway? (y/N): ").strip().lower() == 'y':
+            set_cursor_visible(True)
+            do_download = input("Download fresh version from GitHub anyway? (y/N): ").strip().lower() == 'y'
+            set_cursor_visible(False)
+            if do_download:
                 installer_path = None # Force download
                 
         if not installer_path:

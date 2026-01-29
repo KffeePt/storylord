@@ -4,7 +4,7 @@ import subprocess
 import shutil
 import hashlib
 import json
-from .utils import Colors, DIST_DIR, countdown_or_wait, set_cursor_visible
+from .utils import Colors, DIST_DIR, countdown_or_wait, set_cursor_visible, validate_version_basic, prompt_version_stage, get_full_version
 
 class BuildManager:
     def __init__(self):
@@ -47,17 +47,30 @@ class BuildManager:
         from core.config import get_app_version
         current_ver = get_app_version()
         
-        set_cursor_visible(True)
-        tag_input = input(f"Enter Build Version [{current_ver}]: ").strip()
-        set_cursor_visible(False)
+        # Strip v and labels for the numerical prompt
+        current_base = current_ver.lstrip('v').split('_')[0]
         
-        if not tag_input:
-             new_version = current_ver
-        else:
-            if not tag_input.lower().startswith("v"):
-                 new_version = f"v{tag_input}"
+        while True:
+            set_cursor_visible(True)
+            tag_input = input(f"Enter Build Version [v{current_base}] (e.g. 0.5.0): ").strip()
+            set_cursor_visible(False)
+            
+            if not tag_input:
+                base_version = current_base
+                break
+            
+            # Clean 'v' from input if user typed it
+            base_version = tag_input.lstrip('v')
+            
+            if validate_version_basic(base_version):
+                break
             else:
-                 new_version = tag_input
+                print(f"{Colors.FAIL}Invalid format! Please use numbers and periods (e.g., 0.1.2){Colors.ENDC}")
+
+        # Get stage
+        stage = prompt_version_stage()
+        new_version = get_full_version(base_version, stage)
+
 
         
         # Always update version file if changed OR if user just confirmed current (to be safe? No, only if changed)
@@ -78,16 +91,24 @@ class BuildManager:
              # Check for uncommitted changes
              status = subprocess.check_output(["git", "status", "--porcelain"], stderr=subprocess.DEVNULL).decode("utf-8").strip()
              if status:
-                  if input("Uncommitted changes detected. Commit for tag? (Y/n): ").strip().lower() != 'n':
+                  set_cursor_visible(True)
+                  do_commit = input("Uncommitted changes detected. Commit for tag? (Y/n): ").strip().lower() != 'n'
+                  set_cursor_visible(False)
+                  if do_commit:
                        subprocess.check_call(["git", "add", "."])
+                       set_cursor_visible(True)
                        msg = input(f"Commit Message [chore: Build Version {new_version}]: ").strip() or f"chore: Build Version {new_version}"
+                       set_cursor_visible(False)
                        subprocess.check_call(["git", "commit", "-m", msg])
              
              # Create tag
              # Check if tag exists
              tags = subprocess.check_output(["git", "tag"], stderr=subprocess.DEVNULL).decode("utf-8").splitlines()
              if new_version in tags:
-                 if input(f"Tag {new_version} exists locally. Overwrite? (y/N): ").strip().lower() == 'y':
+                 set_cursor_visible(True)
+                 overwrite = input(f"Tag {new_version} exists locally. Overwrite? (y/N): ").strip().lower() == 'y'
+                 set_cursor_visible(False)
+                 if overwrite:
                      subprocess.check_call(["git", "tag", "-f", new_version])
                      print(f"{Colors.GREEN}Tag updated locally.{Colors.ENDC}")
              else:

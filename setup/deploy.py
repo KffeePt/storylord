@@ -2,7 +2,7 @@ import os
 import subprocess
 import time
 import shutil
-from .utils import Colors, get_latest_local_tag, set_cursor_visible
+from .utils import Colors, get_latest_local_tag, set_cursor_visible, validate_version_basic, prompt_version_stage, get_full_version
 
 def tag_exists_remote(tag_name):
     try:
@@ -43,7 +43,9 @@ class DeployManager:
             print("    You typically cannot push directly to main without write access.")
             print(f"{Colors.BOLD}    You should create a feature branch.{Colors.ENDC}")
             
+            set_cursor_visible(True)
             branch_name = input(f"Enter new branch name (e.g., {Colors.GREEN}feat/add-login{Colors.ENDC}): ").strip()
+            set_cursor_visible(False)
             if not branch_name:
                 print(f"{Colors.FAIL}Aborted. Branch name required.{Colors.ENDC}")
                 return
@@ -59,7 +61,9 @@ class DeployManager:
             status_output = subprocess.check_output(["git", "status", "--porcelain"], stderr=subprocess.DEVNULL).decode("utf-8").strip()
             if status_output:
                 print(f"\n{Colors.WARNING}Uncommitted changes detected.{Colors.ENDC}")
+                set_cursor_visible(True)
                 commit_msg = input("Enter Commit Message: ").strip()
+                set_cursor_visible(False)
                 if not commit_msg:
                     print(f"{Colors.FAIL}Aborted. Commit message required.{Colors.ENDC}")
                     return
@@ -95,49 +99,58 @@ class DeployManager:
         
         if not can_push_to_main():
             print(f"{Colors.FAIL}[!] You do not appear to have WRITE access.{Colors.ENDC}")
-            if input("Try specific deploy anyway? (y/N): ").strip().lower() != 'y':
+            set_cursor_visible(True)
+            try_anyway = input("Try specific deploy anyway? (y/N): ").strip().lower() == 'y'
+            set_cursor_visible(False)
+            if not try_anyway:
                 return
-
-        print(f"\nFormat: x.y.z (Example: {Colors.GREEN}0.2.1{Colors.ENDC})")
-        default_tag = get_latest_local_tag()
-        prompt_msg = f"Enter Tag Version"
-        if default_tag:
-            prompt_msg += f" [{default_tag}]"
-        prompt_msg += ": "
+        # Strip v and labels for the numerical prompt
+        current_base = current_version.lstrip('v').split('_')[0]
         
-        set_cursor_visible(True)
-        tag_input = input(prompt_msg).strip()
-        set_cursor_visible(False)
-        
-        if not tag_input and default_tag:
-            tag_input = default_tag
-            print(f"Using default: {tag_input}")
-        
-        new_version = ""
-        if tag_input:
-            if not tag_input.lower().startswith("v"):
-                new_version = f"v{tag_input}"
+        while True:
+            set_cursor_visible(True)
+            tag_input = input(f"Enter Tag Version [v{current_base}] (e.g. 0.5.0): ").strip()
+            set_cursor_visible(False)
+            
+            if not tag_input:
+                base_version = current_base
+                break
+            
+            # Clean 'v' and validate
+            base_version = tag_input.lstrip('v')
+            if validate_version_basic(base_version):
+                break
             else:
-                new_version = tag_input
+                print(f"{Colors.FAIL}Invalid format! Please use numbers and periods (e.g., 0.1.2){Colors.ENDC}")
+
+        # Get stage and construct final tag
+        stage = prompt_version_stage()
+        tag_version = get_full_version(base_version, stage)
         
-        if new_version:
+        if tag_version:
             try:
                 version_file = os.path.join("src", "core", "_version.py")
                 with open(version_file, "w") as f:
-                    f.write(f'__version__ = "{new_version}"\n')
-                print(f"{Colors.GREEN}Updated {version_file} to {new_version}{Colors.ENDC}")
-                current_version = new_version
+                    f.write(f'__version__ = "{tag_version}"\n')
+                print(f"{Colors.GREEN}Updated {version_file} to {tag_version}{Colors.ENDC}")
+                current_version = tag_version
             except Exception as e:
                 print(f"{Colors.FAIL}Failed to update _version.py: {e}{Colors.ENDC}")
 
         try:
             status_output = subprocess.check_output(["git", "status", "--porcelain"], stderr=subprocess.DEVNULL).decode("utf-8").strip()
             if status_output:
-                if input("Commit changes before releasing? (Y/n): ").strip().lower() != 'n':
+                set_cursor_visible(True)
+                do_commit = input("Commit changes before releasing? (Y/n): ").strip().lower() != 'n'
+                set_cursor_visible(False)
+                if do_commit:
                     subprocess.check_call(["git", "add", "."])
+                    set_cursor_visible(True)
                     msg = input(f"Commit Message [Release {current_version}]: ").strip() or f"chore: Release {current_version}"
+                    set_cursor_visible(False)
                     subprocess.check_call(["git", "commit", "-m", msg])
                     subprocess.check_call(["git", "push", "origin", "main"])
+
         except Exception as e:
             print(f"{Colors.FAIL}Git commit failed: {e}{Colors.ENDC}")
 
@@ -160,7 +173,9 @@ class DeployManager:
         
         if release_exists and remote_tag_exists:
             print(f"\n{Colors.WARNING}[!] Release AND Tag {current_version} already exist on remote.{Colors.ENDC}")
+            set_cursor_visible(True)
             choice = input(f"Overwrite release and force re-trigger CI? ({Colors.GREEN}y{Colors.ENDC}/N): ").strip().lower()
+            set_cursor_visible(False)
             if choice == 'y':
                 should_proceed = True
                 force_retrigger = True
@@ -169,7 +184,9 @@ class DeployManager:
 
         elif remote_tag_exists:
             print(f"\n{Colors.WARNING}[!] Tag {current_version} exists on remote (but no release found).{Colors.ENDC}")
+            set_cursor_visible(True)
             choice = input(f"Force re-trigger CI? ({Colors.GREEN}y{Colors.ENDC}/N): ").strip().lower()
+            set_cursor_visible(False)
             if choice == 'y':
                 should_proceed = True
                 force_retrigger = True
@@ -178,14 +195,20 @@ class DeployManager:
                 
         elif release_exists:
              print(f"{Colors.WARNING}WARNING: Release {current_version} check failed consistency.{Colors.ENDC}")
-             if input(f"Overwrite release? ({Colors.GREEN}y{Colors.ENDC}/N): ").strip().lower() == 'y':
+             set_cursor_visible(True)
+             overwrite = input(f"Overwrite release? ({Colors.GREEN}y{Colors.ENDC}/N): ").strip().lower() == 'y'
+             set_cursor_visible(False)
+             if overwrite:
                  should_proceed = True
              else:
                  return
 
         else:
             print(f"Pushing tag {Colors.BLUE}{current_version}{Colors.ENDC} to GitHub.")
-            if input(f"Proceed? ({Colors.GREEN}Y{Colors.ENDC}/n): ").strip().lower() != 'n':
+            set_cursor_visible(True)
+            proceed = input(f"Proceed? ({Colors.GREEN}Y{Colors.ENDC}/n): ").strip().lower() != 'n'
+            set_cursor_visible(False)
+            if proceed:
                 should_proceed = True
             else:
                 return

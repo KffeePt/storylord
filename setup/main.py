@@ -176,7 +176,6 @@ def main():
                      builder.run_pyinstaller()
                      builder.run_pyinstaller_onefile()
                      builder.run_inno_setup()
-                     countdown_or_wait(True, 15)
                 
                 elif build_mode == "custom":
                     build_choices = run_app_hidden_cursor(checkboxlist_dialog(
@@ -194,7 +193,6 @@ def main():
                         if "exe" in build_choices: builder.run_pyinstaller()
                         if "onefile" in build_choices: builder.run_pyinstaller_onefile()
                         if "installer" in build_choices: builder.run_inno_setup()
-                        countdown_or_wait(True, 15)
 
                 elif build_mode == "nuke":
                     nuke_choice = run_app_hidden_cursor(radiolist_dialog(
@@ -234,10 +232,8 @@ def main():
                  
                  if d_choice == "pr":
                      deployer.submit_pull_request(get_app_version())
-                     countdown_or_wait(True, 15)
                  elif d_choice == "release":
                      deployer.deploy_release(get_app_version())
-                     countdown_or_wait(True, 15)
 
             elif choice == "run_installer":
                 installer.install_app()
