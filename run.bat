@@ -12,9 +12,9 @@ echo Activating environment...
 call .venv\Scripts\activate
 
 echo Installing dependencies...
-pip install -r story_lord/requirements.txt > nul
+pip install -r src/requirements.txt > nul
 
 echo Launching Story Lord...
-python story_lord/main.py
+python src/main.py
 
 pause

@@ -4,7 +4,7 @@ from pathlib import Path
 # System Globals
 STORY_LORD_ROOT = os.path.expanduser("~/Documents/StoryLord")
 _ACTIVE_STORY_ROOT = None
-_SPECS_DIR = None
+_SCHEMAS_DIR = None
 
 CATEGORIES = ["Canon", "Characters", "Rules", "Lore", "Composition", "Episodes"]
 
@@ -18,7 +18,7 @@ def set_story_root(story_name_or_path: str):
     If argument is an absolute path, use it.
     If it's a name, assume it's under STORY_LORD_ROOT.
     """
-    global _ACTIVE_STORY_ROOT, _SPECS_DIR
+    global _ACTIVE_STORY_ROOT, _SCHEMAS_DIR
     
     ensure_global_root()
     
@@ -28,16 +28,16 @@ def set_story_root(story_name_or_path: str):
         target = os.path.join(STORY_LORD_ROOT, story_name_or_path)
     
     _ACTIVE_STORY_ROOT = os.path.abspath(target)
-    _SPECS_DIR = os.path.join(_ACTIVE_STORY_ROOT, "specs")
+    _SCHEMAS_DIR = os.path.join(_ACTIVE_STORY_ROOT, "schemas")
     
     # Ensure story structure exists
-    if not os.path.exists(_SPECS_DIR):
-        os.makedirs(_SPECS_DIR)
+    if not os.path.exists(_SCHEMAS_DIR):
+        os.makedirs(_SCHEMAS_DIR)
 
-def get_specs_dir() -> str:
-    if _SPECS_DIR is None:
+def get_schemas_dir() -> str:
+    if _SCHEMAS_DIR is None:
         raise RuntimeError("Story Root not set. Please select a story first.")
-    return _SPECS_DIR
+    return _SCHEMAS_DIR
 
 def is_story_set() -> bool:
     return _ACTIVE_STORY_ROOT is not None

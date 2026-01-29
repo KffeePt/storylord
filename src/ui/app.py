@@ -8,7 +8,7 @@ from ui.layout import create_layout, SCREENS
 from ui.state import state
 
 # Import Screens to register them
-from ui.screens import dashboard, generator, explorer, sync, launcher
+from ui.screens import dashboard, generator, explorer, sync, launcher, storyboard, settings
 
 def register_screens():
     SCREENS["LAUNCHER"] = launcher.layout
@@ -16,6 +16,8 @@ def register_screens():
     SCREENS["GENERATOR"] = generator.layout
     SCREENS["EXPLORER"] = explorer.layout
     SCREENS["SYNC"] = sync.layout
+    SCREENS["STORYBOARD"] = storyboard.layout
+    SCREENS["SETTINGS"] = settings.layout
 
 class StoryLordApp:
     def __init__(self):
@@ -37,6 +39,7 @@ class StoryLordApp:
             # Menu
             'menu-selected': 'bg:#d4af37 #1e1e1e bold', # Gold highlight
             'menu-item': '#8fbcbb', # Pastel Teal
+            'special-storyboard': 'bg:#d4af37 #000000 bold', # Gold bg, Black text (Special)
             
             # Status
             'error': '#ff5555 bg:#1e1e1e bold', # Pastel Red text
@@ -45,6 +48,7 @@ class StoryLordApp:
             
             # Frames
             'gold-frame': 'bg:#1e1e1e #d4af37 border:#d4af37',
+            'line': '#444444', # Dark grey separator
             'launcher-content': 'bg:#1e1e1e #e0e0e0',
         })
         
@@ -59,6 +63,7 @@ class StoryLordApp:
     
     def setup_global_bindings(self):
         @self.kb.add('c-c')
+        @self.kb.add('q')
         def exit_(event):
              # Force clean exit
              import sys
@@ -76,12 +81,21 @@ class StoryLordApp:
             state.active_screen = "GENERATOR"
             event.app.layout.focus(generator.layout)
         
-        @self.kb.add('f3')
-        def exp(event): 
-            state.active_screen = "EXPLORER"
-            from ui.screens import explorer
-            explorer.refresh() 
-            event.app.layout.focus(explorer.layout)
+        
+        @self.kb.add('escape', 'r')
+        def restart_app(event):
+             # ALT+R
+             import os
+             import sys
+             os.execv(sys.executable, [sys.executable] + sys.argv)
+             
+        @self.kb.add('escape', 'd')
+        def toggle_debug(event):
+            # ALT+D
+            state.show_debug = not state.show_debug
+            state.set_status(f"Debug: {state.show_debug}")
+            
+
             
         @self.kb.add('f4')
         def sync(event): 
@@ -93,6 +107,8 @@ class StoryLordApp:
         @self.kb.add('w')
         def debug_w(event):
              state.set_status("DEBUG: GLOBAL W CAUGHT (NO FOCUS TARGET?)")
+
+
 
     def run(self):
         self.app.run()

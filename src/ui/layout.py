@@ -16,7 +16,7 @@ from ui.state import state
 SCREENS = {}
 from ui.screens import dashboard # explicit import for focus targeting
 
-MENU_ITEMS = ["DASHBOARD", "GENERATOR", "EXPLORER", "SYNC"]
+MENU_ITEMS = ["DASHBOARD", "GENERATOR", "EXPLORER", "SYNC", "SETTINGS"]
 
 # Global control ref for focus checking
 sidebar_control = None
@@ -117,9 +117,13 @@ def create_layout():
         except:
              pass
 
+        debug_text = ""
+        if state.show_debug:
+             debug_text = f" | Focus: {focus_debug}"
+        
         return [
             ("class:header", f" STORY LORD v3 | {state.status_message} "),
-            ("", f" | Focus: {focus_debug}")
+            ("", debug_text)
         ]
 
     header = Window(height=1, content=FormattedTextControl(

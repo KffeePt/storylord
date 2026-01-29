@@ -2,11 +2,11 @@ import os
 import json
 import re
 from typing import Dict
-from .config import get_specs_dir
+from .config import get_schemas_dir
 from .models import StoryMetadata, StorySpec
 
 def get_metadata_file():
-    return os.path.join(get_specs_dir(), "_metadata.json")
+    return os.path.join(get_schemas_dir(), "_metadata.json")
 
 def load_all_metadata() -> StoryMetadata:
     meta_file = get_metadata_file()
@@ -90,7 +90,7 @@ def update_file_header(filepath, new_meta):
         return False
 
 def scan_and_sync():
-    specs_dir = get_specs_dir()
+    specs_dir = get_schemas_dir()
     data = load_all_metadata() # StoryMetadata object
     
     on_disk_paths = set()

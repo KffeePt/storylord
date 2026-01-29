@@ -1,5 +1,6 @@
 import os
-from story_lord.core.metadata import scan_and_sync, load_all_metadata, update_file_header
+from src.core.metadata import parse_header_from_file, update_file_header, load_all_metadata, scan_and_sync
+from src.core.models import StorySpec
 
 def test_scan_creates_metadata(mock_specs):
     # Setup: Create a file manually
@@ -14,9 +15,9 @@ def test_scan_creates_metadata(mock_specs):
     
     # Assert
     key = "Lore/test.md"
-    assert key in data["specs"]
-    assert data["specs"][key]["title"] == "Test"
-    assert data["specs"][key]["version"] == "1.0"
+    assert key in data.specs
+    assert data.specs[key].title == "Test"
+    assert data.specs[key].version == "1.0"
 
 def test_update_header(mock_specs):
     # Setup

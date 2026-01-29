@@ -1,9 +1,10 @@
 import os
-from story_lord.core.generator import generate_spec
+from src.core import generator
+from src.core.models import StorySpec, GeneratorRequest
 
 def test_generate_spec_creates_file(mock_specs):
     # Act
-    success, msg = generate_spec("Lore", "My New Spec", "0.1", "Desc")
+    success, msg = generator.generate_spec("Lore", "My New Spec", "0.1", "Desc")
     
     # Assert
     assert success
@@ -17,10 +18,10 @@ def test_generate_spec_creates_file(mock_specs):
 
 def test_generate_spec_no_overwrite(mock_specs):
     # Setup
-    generate_spec("Lore", "Duplicate", "0.1")
+    generator.generate_spec("Lore", "Duplicate", "0.1")
     
     # Act
-    success, msg = generate_spec("Lore", "Duplicate", "0.2")
+    success, msg = generator.generate_spec("Lore", "Duplicate", "0.2")
     
     # Assert
     assert not success

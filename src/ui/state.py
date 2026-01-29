@@ -10,11 +10,16 @@ class AppState:
         self.active_focus_zone = "SIDEBAR" # "SIDEBAR" or "CONTENT"
         
         # Explorer State
-        self.exp_files = []
+        self.exp_mode = "CATEGORIES" # "CATEGORIES" or "FILES"
+        self.exp_category = None # Current selected category
+        self.exp_files = [] # Current list relative to mode
         self.exp_selected_idx = 0
         
         # Gen State
         self.gen_cat_idx = 0
+
+        # Debug
+        self.show_debug = False
         
     def set_status(self, msg):
         self.status_message = msg

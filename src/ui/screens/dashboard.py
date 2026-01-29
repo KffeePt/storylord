@@ -26,7 +26,7 @@ DASHBOARD_MENU_TREE = {
     "STORY_OPS": {
         "label": "Story Operations",
         "description": "Manage content for the active story.",
-        "children": ["NAV_GEN", "NAV_EXP", "NAV_SYNC"],
+        "children": ["NAV_GEN", "NAV_EXP", "NAV_STORY", "NAV_SYNC"],
         "props": {"section": "story"}
     },
     "SYSTEM_OPS": {
@@ -43,6 +43,11 @@ DASHBOARD_MENU_TREE = {
         "label": "Explorer",
         "description": "View and manage file structure.",
         "param": "EXPLORER"
+    },
+    "NAV_STORY": {
+        "label": "Storyboard (Timeline)",
+        "description": "Visual Event Editor",
+        "param": "STORYBOARD"
     },
     "NAV_SYNC": {
         "label": "Sync Status",
@@ -64,7 +69,7 @@ def execute_action(action_param):
     if action_param == "EXIT":
         from prompt_toolkit.application.current import get_app
         get_app().exit()
-    elif action_param in ["GENERATOR", "EXPLORER", "SYNC"]:
+    elif action_param in ["GENERATOR", "EXPLORER", "SYNC", "STORYBOARD"]:
         # Switch screen
         state.active_screen = action_param
         
@@ -81,6 +86,11 @@ def execute_action(action_param):
         if action_param == "SYNC":
             sync.refresh()
             get_app().layout.focus(sync.layout)
+            
+        if action_param == "STORYBOARD":
+            from ui.screens import storyboard
+            storyboard.refresh()
+            get_app().layout.focus(storyboard.layout)
 
 def get_menu_render():
     node = menu_mgr.get_current_node()
