@@ -2,7 +2,7 @@ import os
 import subprocess
 import time
 import shutil
-from .utils import Colors, get_latest_local_tag, set_cursor_visible, validate_version_basic, prompt_version_stage, get_full_version
+from .utils import Colors, get_latest_local_tag, set_cursor_visible, validate_version_basic, prompt_version_stage, get_full_version, IS_CI
 
 def tag_exists_remote(tag_name):
     try:
@@ -39,6 +39,10 @@ class DeployManager:
         print(f"\n{Colors.CYAN}--- Submit Pull Request ---{Colors.ENDC}")
         
         if check_branch_is_main():
+            if IS_CI:
+                print(f"{Colors.FAIL}[CI] Branching from main is not supported headlessly.{Colors.ENDC}")
+                return
+
             print(f"{Colors.WARNING}[!] You are currently on the 'main' branch.{Colors.ENDC}")
             print("    You typically cannot push directly to main without write access.")
             print(f"{Colors.BOLD}    You should create a feature branch.{Colors.ENDC}")
@@ -60,6 +64,10 @@ class DeployManager:
         try:
             status_output = subprocess.check_output(["git", "status", "--porcelain"], stderr=subprocess.DEVNULL).decode("utf-8").strip()
             if status_output:
+                if IS_CI:
+                    print(f"{Colors.FAIL}[CI] Uncommitted changes detected. Aborting PR.{Colors.ENDC}")
+                    return
+
                 print(f"\n{Colors.WARNING}Uncommitted changes detected.{Colors.ENDC}")
                 set_cursor_visible(True)
                 commit_msg = input("Enter Commit Message: ").strip()
@@ -107,21 +115,23 @@ class DeployManager:
         # Strip v and labels for the numerical prompt
         current_base = current_version.lstrip('v').split('_')[0]
         
-        while True:
-            set_cursor_visible(True)
-            tag_input = input(f"Enter Tag Version [v{current_base}] (e.g. 0.5.0): ").strip()
-            set_cursor_visible(False)
-            
-            if not tag_input:
-                base_version = current_base
-                break
-            
-            # Clean 'v' and validate
-            base_version = tag_input.lstrip('v')
-            if validate_version_basic(base_version):
-                break
-            else:
-                print(f"{Colors.FAIL}Invalid format! Please use numbers and periods (e.g., 0.1.2){Colors.ENDC}")
+        base_version = current_base
+        if not IS_CI:
+            while True:
+                set_cursor_visible(True)
+                tag_input = input(f"Enter Tag Version [v{current_base}] (e.g. 0.5.0): ").strip()
+                set_cursor_visible(False)
+                
+                if not tag_input:
+                    base_version = current_base
+                    break
+                
+                # Clean 'v' and validate
+                base_version = tag_input.lstrip('v')
+                if validate_version_basic(base_version):
+                    break
+                else:
+                    print(f"{Colors.FAIL}Invalid format! Please use numbers and periods (e.g., 0.1.2){Colors.ENDC}")
 
         # Get stage and construct final tag
         current_parts = current_version.split('_', 1)
@@ -216,8 +226,10 @@ class DeployManager:
             else:
                 return
 
-        if not should_proceed:
+        if not should_proceed and not IS_CI:
             return
+        
+        if IS_CI: should_proceed = True # Force in CI if triggered
 
         if force_retrigger:
             print(f"{Colors.WARNING}Deleting remote tag...{Colors.ENDC}")

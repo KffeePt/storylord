@@ -5,6 +5,7 @@ import time
 # Constants
 DIST_DIR = os.path.abspath("bin/Dist/StoryLord") 
 INSTALLER_DIR = os.path.abspath("bin/Installer")
+IS_CI = os.environ.get("GITHUB_ACTIONS") == "true" or os.environ.get("CI") == "true"
 
 class Colors:
     HEADER = '\033[95m'
@@ -21,8 +22,6 @@ class Colors:
 
 def countdown_or_wait(success: bool, seconds: int = 5):
     """On success: auto-continue after countdown. On failure: wait for Enter."""
-    # Check if running in a non-interactive environment
-    is_ci = os.environ.get("GITHUB_ACTIONS") == "true" or os.environ.get("CI") == "true"
 
     if success:
         print(f"\nSuccess! Continuing in {seconds} seconds...", end="", flush=True)
@@ -30,7 +29,7 @@ def countdown_or_wait(success: bool, seconds: int = 5):
             time.sleep(1)
         print("\n")
     else:
-        if is_ci:
+        if IS_CI:
             print("\n[CI DETECTED] Build Failed. Exiting immediately without waiting for input.")
             sys.exit(1)
         else:
@@ -85,6 +84,9 @@ def validate_version_basic(version_str: str) -> bool:
 
 def prompt_version_stage(current_stage: str = "") -> str:
     """Prompts for release stage: a (alpha), b (beta), p (prod), or Enter for current."""
+    if IS_CI:
+        return current_stage
+
     stage_display = current_stage.lstrip('_') if current_stage else "prod"
     print(f"\nRelease Stage: {Colors.CYAN}a{Colors.ENDC} (alpha), {Colors.CYAN}b{Colors.ENDC} (beta), {Colors.CYAN}p{Colors.ENDC} (prod), or {Colors.BOLD}Enter{Colors.ENDC} for [{stage_display}]")
     

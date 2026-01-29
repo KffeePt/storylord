@@ -4,7 +4,7 @@ import subprocess
 import shutil
 import hashlib
 import json
-from .utils import Colors, DIST_DIR, countdown_or_wait, set_cursor_visible, validate_version_basic, prompt_version_stage, get_full_version
+from .utils import Colors, DIST_DIR, countdown_or_wait, set_cursor_visible, validate_version_basic, prompt_version_stage, get_full_version, IS_CI
 
 class BuildManager:
     def __init__(self):
@@ -50,22 +50,24 @@ class BuildManager:
         # Strip v and labels for the numerical prompt
         current_base = current_ver.lstrip('v').split('_')[0]
         
-        while True:
-            set_cursor_visible(True)
-            tag_input = input(f"Enter Build Version [v{current_base}] (e.g. 0.5.0): ").strip()
-            set_cursor_visible(False)
-            
-            if not tag_input:
-                base_version = current_base
-                break
-            
-            # Clean 'v' from input if user typed it
-            base_version = tag_input.lstrip('v')
-            
-            if validate_version_basic(base_version):
-                break
-            else:
-                print(f"{Colors.FAIL}Invalid format! Please use numbers and periods (e.g., 0.1.2){Colors.ENDC}")
+        base_version = current_base
+        if not IS_CI:
+            while True:
+                set_cursor_visible(True)
+                tag_input = input(f"Enter Build Version [v{current_base}] (e.g. 0.5.0): ").strip()
+                set_cursor_visible(False)
+                
+                if not tag_input:
+                    base_version = current_base
+                    break
+                
+                # Clean 'v' from input if user typed it
+                base_version = tag_input.lstrip('v')
+                
+                if validate_version_basic(base_version):
+                    break
+                else:
+                    print(f"{Colors.FAIL}Invalid format! Please use numbers and periods (e.g., 0.1.2){Colors.ENDC}")
 
         # Get stage
         current_parts = current_ver.split('_', 1)
@@ -88,7 +90,10 @@ class BuildManager:
                 print(f"{Colors.FAIL}Failed to update version file: {e}{Colors.ENDC}")
                 return
         
-        # Tag locally
+        # Tag locally (Bypass in CI)
+        if IS_CI:
+            return
+
         print(f"Creating local tag {new_version}...")
         try:
              # Check for uncommitted changes
