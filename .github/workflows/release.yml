@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - 'v*'
+      - 'V*'
 
 jobs:
   release:
@@ -33,6 +34,9 @@ jobs:
 
       - name: Build Portable EXE
         run: python setup.py --onefile
+
+      - name: Build Directory EXE (For Installer)
+        run: python setup.py --build
 
       - name: Build Installer
         run: python setup.py --installer
