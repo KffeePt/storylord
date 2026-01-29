@@ -32,6 +32,7 @@ class StoryLordApp:
             # Components
             'header': 'bg:#d4af37 #1e1e1e bold', # Gold bg, Dark text
             'sidebar': 'bg:#252526 #e0e0e0', # VS Code-ish sidebar
+            'sidebar-active-blur': '#888888',
             
             # Menu
             'menu-selected': 'bg:#d4af37 #1e1e1e bold', # Gold highlight
@@ -88,6 +89,10 @@ class StoryLordApp:
             from ui.screens import sync
             sync.refresh()
             event.app.layout.focus(sync.layout)
+
+        @self.kb.add('w')
+        def debug_w(event):
+             state.set_status("DEBUG: GLOBAL W CAUGHT (NO FOCUS TARGET?)")
 
     def run(self):
         self.app.run()

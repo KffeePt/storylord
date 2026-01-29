@@ -7,6 +7,7 @@ class AppState:
         # Story State
         self.is_story_loaded = False
         self.story_path = None
+        self.active_focus_zone = "SIDEBAR" # "SIDEBAR" or "CONTENT"
         
         # Explorer State
         self.exp_files = []

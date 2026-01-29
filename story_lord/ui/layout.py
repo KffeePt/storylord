@@ -14,18 +14,28 @@ from ui.state import state
 # Actually, create_layout is called by app, which has imported screens. 
 # We can use a global registry or passed in mapping.
 SCREENS = {}
+from ui.screens import dashboard # explicit import for focus targeting
 
 MENU_ITEMS = ["DASHBOARD", "GENERATOR", "EXPLORER", "SYNC"]
+
+# Global control ref for focus checking
+sidebar_control = None
 
 def get_sidebar_text():
     # Renders the sidebar
     # We highlight the active one.
-    # If sidebar has focus, maybe make it brighter? 
-    # For now, standard selected style.
+    
+    # Check if we have focus based on STATE (Robust)
+    is_focused = (state.active_focus_zone == "SIDEBAR")
+
     lines = []
     for item in MENU_ITEMS:
         if state.active_screen == item:
-             lines.append(('class:menu-selected', f" > {item} \n"))
+            if is_focused:
+                 lines.append(('class:menu-selected', f" > {item} \n"))
+            else:
+                 # Active but not focused (dimmed)
+                 lines.append(('class:sidebar-active-blur', f" > {item} \n"))
         else:
              lines.append(('class:sidebar-item', f"   {item} \n"))
     lines.append(('', '\n [Q] Quit'))
@@ -37,6 +47,7 @@ kb_sidebar = KeyBindings()
 @kb_sidebar.add('up')
 @kb_sidebar.add('w') 
 def _up(e):
+    state.set_status("DEBUG: SIDEBAR UP/W")
     try:
         idx = MENU_ITEMS.index(state.active_screen)
         new_idx = max(0, idx - 1)
@@ -59,10 +70,15 @@ def _down(e):
 @kb_sidebar.add('enter')
 def _enter_content(e):
     # Focus the content area
-    # We need to find the Window of the active screen.
-    # Since DynamicContainer uses the SCREENS dict, we can try to find the focusable window in that layout.
+    # Direct Target Strategy
+    if state.active_screen == "DASHBOARD":
+         state.active_focus_zone = "CONTENT"
+         e.app.layout.focus(dashboard.menu_control)
+         return
+
     target_layout = SCREENS.get(state.active_screen)
     if target_layout:
+        state.active_focus_zone = "CONTENT"
         e.app.layout.focus(target_layout)
 
 def get_content_container():
@@ -70,6 +86,7 @@ def get_content_container():
     return SCREENS.get(state.active_screen, Window(align="center", content=FormattedTextControl("Screen Not Found")))
 
 def create_layout():
+    global sidebar_control
     # Sidebar
     sidebar_control = FormattedTextControl(get_sidebar_text, key_bindings=kb_sidebar, show_cursor=False, focusable=True)
     sidebar = Box(
@@ -79,8 +96,34 @@ def create_layout():
     )
     
     # Header
+    def get_header_text():
+        cw = get_app().layout.current_window
+        focus_debug = "Unknown"
+        if cw:
+             focus_debug = str(cw).split("object at")[0] # Simple repr
+        
+        # Auto-Heal State
+        try:
+             # Lazy import checks
+             from ui.screens.dashboard import menu_control
+             if get_app().layout.has_focus(menu_control):
+                 if state.active_focus_zone != "CONTENT":
+                      state.active_focus_zone = "CONTENT"
+                      state.set_status("DEBUG: AUTO-HEAL -> CONTENT")
+             elif get_app().layout.has_focus(sidebar_control):
+                 if state.active_focus_zone != "SIDEBAR":
+                      state.active_focus_zone = "SIDEBAR"
+                      state.set_status("DEBUG: AUTO-HEAL -> SIDEBAR")
+        except:
+             pass
+
+        return [
+            ("class:header", f" STORY LORD v3 | {state.status_message} "),
+            ("", f" | Focus: {focus_debug}")
+        ]
+
     header = Window(height=1, content=FormattedTextControl(
-        lambda: f" STORY LORD v3 | {state.status_message} ", style='class:header'
+        get_header_text, style='class:header'
     ))
     
     # Main Content Area (Dynamic)

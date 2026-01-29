@@ -5,6 +5,16 @@ from prompt_toolkit.key_binding import KeyBindings
 from ui.state import state
 from ui.menu import MenuManager
 from ui.screens import generator, explorer, sync
+import os
+
+def dbg(msg):
+    try:
+        with open("dashboard_debug.txt", "a") as f:
+            f.write(f"{str(msg)}\n")
+    except:
+        pass
+
+# --- Menu Definition ---
 
 # --- Menu Definition ---
 DASHBOARD_MENU_TREE = {
@@ -78,6 +88,15 @@ def get_menu_render():
     
     lines = []
     
+    # Check focus
+    is_focused = (state.active_focus_zone == "CONTENT")
+    if is_focused:
+         pass # Good
+    else:
+         # Double check if we actually have PTK focus despite state sayng otherwise? 
+         # No, rely on our state.
+         pass
+
     # Path / Title
     lines.append(("class:header", f" {node.label} \n"))
     lines.append(("", f" {node.description}\n\n"))
@@ -89,48 +108,68 @@ def get_menu_render():
     # Children
     for i, child in enumerate(children):
         if i == menu_mgr.selected_idx:
-            lines.append(("class:menu-selected", f" > {child.label} \n"))
+            if is_focused:
+                lines.append(("class:menu-selected", f" > {child.label} \n"))
+            else:
+                lines.append(("class:menu-item", f" > {child.label} \n")) # Standard style if not focused
         else:
             lines.append(("class:menu-item", f"   {child.label} \n"))
             
     return lines
 
+from prompt_toolkit.keys import Keys
+
 kb = KeyBindings()
-@kb.add('up')
-@kb.add('w')
-def _up(e): menu_mgr.navigate_up()
+@kb.add('<any>')
+def _handler(event):
+    key = event.key_sequence[0].key
+    char = event.data
+    
+    # Debug
+    # state.set_status(f"DBG: Key={key} Char={char}") # Too noisy?
+    
+    if key == Keys.Up or char == 'w':
+        state.set_status("DEBUG: DASHBOARD UP/W (ANY)")
+        try:
+            menu_mgr.navigate_up()
+        except Exception as ex:
+            state.set_status(f"ERR: {ex}")
+            
+    elif key == Keys.Down or char == 's':
+        state.set_status("DEBUG: DASHBOARD DOWN/S (ANY)")
+        try:
+            menu_mgr.navigate_down()
+        except Exception as ex:
+            state.set_status(f"ERR: {ex}")
+            
+    elif key == Keys.Right or key == Keys.Enter or char == 'd':
+        state.set_status("DEBUG: DASHBOARD ENTER (ANY)")
+        try:
+            action = menu_mgr.enter_child()
+            if action:
+                execute_action(action)
+        except Exception as ex:
+            state.set_status(f"ERR: {ex}")
+            
+    elif key == Keys.Left or char == 'a':
+        state.set_status("DEBUG: DASHBOARD BACK (ANY)")
+        try:
+            if menu_mgr.history:
+                menu_mgr.go_back()
+            else:
+                state.set_status("DEBUG: Back to SIDEBAR")
+                state.active_focus_zone = "SIDEBAR"
+                event.app.layout.focus_previous()
+        except Exception as ex:
+            state.set_status(f"ERR: {ex}")
 
-@kb.add('down')
-@kb.add('s')
-def _down(e): menu_mgr.navigate_down()
+menu_control = FormattedTextControl(get_menu_render, key_bindings=kb, focusable=True, show_cursor=False)
 
-@kb.add('right')
-@kb.add('d')
-@kb.add('enter')
-def _enter(e):
-    action = menu_mgr.enter_child()
-    if action:
-        execute_action(action)
-
-@kb.add('left')
-@kb.add('a')
-def _back(e): 
-    # Check if we can go back in menu
-    if menu_mgr.history:
-        menu_mgr.go_back()
-    else:
-        # We are at root, go back to sidebar
-        # We need to find the sidebar window. 
-        # In a HSplit/VSplit, we can use focus_previous checks? 
-        # Easier: Focus the sidebar Logic.
-        # But we don't have direct ref to sidebar object here easily without imports cycle.
-        # HACK: Traverse layout or standard focus_previous?
-        # Sidebar is usually "before" content in VSplit.
-        e.app.layout.focus_previous()
-
+# Restore Frame
+from prompt_toolkit.widgets import Frame
 layout = Frame(
     body=Window(
-        content=FormattedTextControl(get_menu_render, key_bindings=kb, focusable=True, show_cursor=False),
+        content=menu_control,
         align=WindowAlign.CENTER,
         style="class:launcher-content",
         wrap_lines=False,

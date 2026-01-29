@@ -95,16 +95,13 @@ def handle_menu_input(event):
             state.load_story(path)
             state.active_screen = "DASHBOARD"
             
-            # Reset focus to sidebar?
-            # Since sidebar is the first focusable element in the main layout VSplit, 
-            # we might just let prompt_toolkit find it, or force focus on the app (which resets to root?).
-            # Let's try explicit focusing if we can find it, otherwise rely on layout order.
-            # But the layout is dynamic. 
-            # Ideally we want to focus the Sidebar.
-            # The sidebar window doesn't have a global reference. 
-            # We can try to traverse or just use focus_next()?
-            # Let's NOT force focus on dashboard.layout.
-            pass
+            # Force focus to dashboard
+            try:
+                state.active_focus_zone = "CONTENT"
+                from ui.screens import dashboard
+                event.app.layout.focus(dashboard.menu_control)
+            except Exception as e:
+                state.set_status(f"Focus Error: {e}")
             
         elif opt["action"] == "create":
             input_buffer = ""
