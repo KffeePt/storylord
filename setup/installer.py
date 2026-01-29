@@ -65,9 +65,11 @@ class InstallerManager:
                     all_matches.append(generic)
         
         if all_matches:
-            # Pick latest modified among all found
-            installer_path = max(all_matches, key=os.path.getctime)
-            print(f"Found installer: {os.path.basename(installer_path)} in {os.path.dirname(installer_path)}")
+            # Pick latest modified among all found (Guard against vanished files)
+            valid_matches = [m for m in all_matches if os.path.exists(m)]
+            if valid_matches:
+                installer_path = max(valid_matches, key=os.path.getctime)
+                print(f"Found installer: {os.path.basename(installer_path)} in {os.path.dirname(installer_path)}")
             
             set_cursor_visible(True)
             do_download = input("Download fresh version from GitHub anyway? (y/N): ").strip().lower() == 'y'

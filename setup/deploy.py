@@ -124,7 +124,10 @@ class DeployManager:
                 print(f"{Colors.FAIL}Invalid format! Please use numbers and periods (e.g., 0.1.2){Colors.ENDC}")
 
         # Get stage and construct final tag
-        stage = prompt_version_stage()
+        current_parts = current_version.split('_', 1)
+        current_stage = f"_{current_parts[1]}" if len(current_parts) > 1 else ""
+        
+        stage = prompt_version_stage(current_stage)
         tag_version = get_full_version(base_version, stage)
         
         if tag_version:

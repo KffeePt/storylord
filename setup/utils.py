@@ -83,18 +83,24 @@ def validate_version_basic(version_str: str) -> bool:
     import re
     return bool(re.match(r"^\d+\.\d+\.\d+$", version_str))
 
-def prompt_version_stage() -> str:
-    """Prompts for release stage: alpha (a), beta (b), or prod (empty)."""
-    print(f"\nRelease Stage: {Colors.CYAN}a{Colors.ENDC} (alpha), {Colors.CYAN}b{Colors.ENDC} (beta), or {Colors.BOLD}Enter{Colors.ENDC} for Production")
+def prompt_version_stage(current_stage: str = "") -> str:
+    """Prompts for release stage: a (alpha), b (beta), p (prod), or Enter for current."""
+    stage_display = current_stage.lstrip('_') if current_stage else "prod"
+    print(f"\nRelease Stage: {Colors.CYAN}a{Colors.ENDC} (alpha), {Colors.CYAN}b{Colors.ENDC} (beta), {Colors.CYAN}p{Colors.ENDC} (prod), or {Colors.BOLD}Enter{Colors.ENDC} for [{stage_display}]")
+    
     set_cursor_visible(True)
-    choice = input("Stage [prod]: ").strip().lower()
+    choice = input("Stage: ").strip().lower()
     set_cursor_visible(False)
     
     if choice == 'a' or choice == 'alpha':
         return "_alpha"
     elif choice == 'b' or choice == 'beta':
         return "_beta"
-    return ""
+    elif choice == 'p' or choice == 'prod' or choice == 'production':
+        return ""
+    elif not choice:
+        return current_stage
+    return current_stage
 
 def get_full_version(base_version: str, stage: str) -> str:
     """Constructs final version string like v1.2.3_alpha."""

@@ -68,7 +68,10 @@ class BuildManager:
                 print(f"{Colors.FAIL}Invalid format! Please use numbers and periods (e.g., 0.1.2){Colors.ENDC}")
 
         # Get stage
-        stage = prompt_version_stage()
+        current_parts = current_ver.split('_', 1)
+        current_stage = f"_{current_parts[1]}" if len(current_parts) > 1 else ""
+        
+        stage = prompt_version_stage(current_stage)
         new_version = get_full_version(base_version, stage)
 
 
