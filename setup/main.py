@@ -117,8 +117,8 @@ def main():
                     text="Select Task:",
                     style=custom_style,
                     values=[
-                        ("build", "Dev: Build & Test Menu..."),
                         ("deploy", "Dev: Deploy / Release (GitHub)"),
+                        ("build", "Dev: Build & Test Menu..."),
                         ("run_installer", "User: Run Installer (Install / Repair)"),
                         ("exit", "Exit")
                     ]
@@ -224,8 +224,8 @@ def main():
                     title="Deploy Menu",
                     style=custom_style,
                     values=[
-                        ("pr", "Submit Pull Request"),
-                        ("release", "Deploy Release")
+                        ("release", "Deploy Release"),
+                        ("pr", "Submit Pull Request")
                     ]
                  ))
                  set_cursor_visible(False)

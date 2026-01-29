@@ -5,7 +5,7 @@ import time
 # Constants
 DIST_DIR = os.path.abspath("bin/Dist/StoryLord") 
 INSTALLER_DIR = os.path.abspath("bin/Installer")
-IS_CI = os.environ.get("GITHUB_ACTIONS") == "true" or os.environ.get("CI") == "true"
+IS_CI = os.environ.get("GITHUB_ACTIONS") == "true" or os.environ.get("CI") == "true" or os.environ.get("GITHUB_RUN_ID") is not None
 
 class Colors:
     HEADER = '\033[95m'

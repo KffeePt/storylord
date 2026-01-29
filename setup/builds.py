@@ -39,6 +39,11 @@ class BuildManager:
             print(f"Manifest saved to {manifest_path}")
 
     def prepare_build_version(self):
+        if IS_CI:
+            print(f"{Colors.BLUE}[CI DEBUG] Headless mode ACTIVE (IS_CI=True). Bypassing interactive prompts.{Colors.ENDC}")
+        else:
+            print(f"[DEBUG] Interactive mode ACTIVE (IS_CI=False).")
+            
         print(f"\n{Colors.CYAN}--- Build Version Configuration ---{Colors.ENDC}")
         print(f"Format: x.y.z (Example: {Colors.GREEN}0.2.1{Colors.ENDC})")
         
